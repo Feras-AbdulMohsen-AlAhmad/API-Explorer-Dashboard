@@ -1,0 +1,58 @@
+.page {
+  padding: 0 var(--space-4);
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.page-header h1 {
+  font-size: 1.6rem;
+}
+
+.page-header .actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.section-block {
+  margin-bottom: var(--space-6);
+}
+
+.empty-state,
+.error-state {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--color-muted);
+  background: rgba(226, 232, 240, 0.25);
+}
+
+.error-state {
+  color: var(--color-danger);
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.empty-state h3,
+.error-state h3 {
+  margin-bottom: var(--space-3);
+}
+
+.empty-state p,
+.error-state p {
+  color: var(--color-muted);
+}
