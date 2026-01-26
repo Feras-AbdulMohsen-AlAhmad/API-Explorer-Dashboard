@@ -1,0 +1,447 @@
+{
+  "info": {
+    "name": "API Explorer Dashboard",
+    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, and Open-Meteo APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "JSONPlaceholder",
+      "item": [
+        {
+          "name": "Get All Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts"]
+            },
+            "description": "Retrieve all posts from JSONPlaceholder"
+          }
+        },
+        {
+          "name": "Get Post by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Retrieve a specific post by ID"
+          }
+        },
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}/comments",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}", "comments"]
+            },
+            "description": "Retrieve all comments for a specific post"
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Post Title\",\n  \"body\": \"This is the content of the new post.\",\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts"]
+            },
+            "description": "Create a new post"
+          }
+        },
+        {
+          "name": "Update Post (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{post_id}},\n  \"title\": \"Updated Post Title\",\n  \"body\": \"This is the updated content.\",\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Update a post using PUT (replaces entire resource)"
+          }
+        },
+        {
+          "name": "Update Post (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Partially Updated Title\"\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Update a post using PATCH (partial update)"
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Delete a post by ID"
+          }
+        }
+      ],
+      "description": "CRUD operations for posts and comments using JSONPlaceholder API"
+    },
+    {
+      "name": "Rick & Morty",
+      "item": [
+        {
+          "name": "Get Characters (Default)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"]
+            },
+            "description": "Get all characters with default pagination (page 1)"
+          }
+        },
+        {
+          "name": "Get Characters (Page 2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?page=2",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Get characters from page 2"
+          }
+        },
+        {
+          "name": "Filter by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?name=rick",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "rick"
+                }
+              ]
+            },
+            "description": "Filter characters by name"
+          }
+        },
+        {
+          "name": "Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?status=alive",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "alive",
+                  "description": "Options: alive, dead, unknown"
+                }
+              ]
+            },
+            "description": "Filter characters by status (alive, dead, unknown)"
+          }
+        },
+        {
+          "name": "Filter by Species",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?species=human",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "species",
+                  "value": "human"
+                }
+              ]
+            },
+            "description": "Filter characters by species"
+          }
+        },
+        {
+          "name": "Filter by Gender",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?gender=male",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "gender",
+                  "value": "male",
+                  "description": "Options: female, male, genderless, unknown"
+                }
+              ]
+            },
+            "description": "Filter characters by gender"
+          }
+        },
+        {
+          "name": "Multiple Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?name=rick&status=alive&species=human",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "rick"
+                },
+                {
+                  "key": "status",
+                  "value": "alive"
+                },
+                {
+                  "key": "species",
+                  "value": "human"
+                }
+              ]
+            },
+            "description": "Combine multiple filters for precise results"
+          }
+        }
+      ],
+      "description": "Character queries with pagination and filtering using Rick & Morty API"
+    },
+    {
+      "name": "REST Countries",
+      "item": [
+        {
+          "name": "Get All Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/all",
+              "host": ["{{restcountries_url}}"],
+              "path": ["all"]
+            },
+            "description": "Retrieve information about all countries"
+          }
+        },
+        {
+          "name": "Get Country by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/name/netherlands",
+              "host": ["{{restcountries_url}}"],
+              "path": ["name", "netherlands"]
+            },
+            "description": "Search for a country by name"
+          }
+        },
+        {
+          "name": "Get Country by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/alpha/nl",
+              "host": ["{{restcountries_url}}"],
+              "path": ["alpha", "nl"]
+            },
+            "description": "Get country by ISO 3166-1 alpha-2 or alpha-3 code"
+          }
+        },
+        {
+          "name": "Filter by Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/region/europe",
+              "host": ["{{restcountries_url}}"],
+              "path": ["region", "europe"]
+            },
+            "description": "Get all countries in a specific region"
+          }
+        }
+      ],
+      "description": "Country data retrieval using REST Countries API"
+    },
+    {
+      "name": "Open-Meteo",
+      "item": [
+        {
+          "name": "Get Forecast (Amsterdam)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude={{amsterdam_lat}}&longitude={{amsterdam_lon}}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{amsterdam_lat}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{amsterdam_lon}}"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,weather_code"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get current weather and 7-day forecast for Amsterdam"
+          }
+        },
+        {
+          "name": "Get Forecast (Custom Location)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "40.7128",
+                  "description": "New York latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "-74.0060",
+                  "description": "New York longitude"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,weather_code"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get weather forecast for any location (example: New York)"
+          }
+        },
+        {
+          "name": "Get Forecast (Extended)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude={{amsterdam_lat}}&longitude={{amsterdam_lon}}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{amsterdam_lat}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{amsterdam_lon}}"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get extended forecast with humidity, wind speed, and precipitation"
+          }
+        }
+      ],
+      "description": "Weather forecast data using Open-Meteo API"
+    }
+  ]
+}
