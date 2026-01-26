@@ -2,6 +2,7 @@ import {
   getAllPosts,
   getPostById,
   getPostComments,
+  createPost,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
@@ -29,12 +30,32 @@ export function renderPostsPage(appEl) {
           />
         </div>
       </div>
+      <div class="section-block">
+        <form id="create-post-form" class="card" style="display: grid; gap: var(--space-4);">
+          <div>
+            <label for="post-title">Title</label>
+            <input id="post-title" name="title" class="input" required />
+          </div>
+          <div>
+            <label for="post-body">Body</label>
+            <textarea id="post-body" name="body" class="input" rows="3" required></textarea>
+          </div>
+          <div>
+            <label for="post-user">User ID</label>
+            <input id="post-user" name="userId" class="input" type="number" min="1" required />
+          </div>
+          <div class="actions" style="justify-content: flex-end; gap: var(--space-3);">
+            <button type="submit" class="btn btn-primary">Create Post</button>
+          </div>
+        </form>
+      </div>
       <div id="posts-content" class="section-block"></div>
     </section>
   `;
 
   const contentEl = appEl.querySelector("#posts-content");
   const searchInput = appEl.querySelector("#posts-search");
+  const createForm = appEl.querySelector("#create-post-form");
 
   let allPosts = [];
   let currentTerm = "";
@@ -118,6 +139,8 @@ export function renderPostsPage(appEl) {
 
   searchInput?.addEventListener("input", onSearch);
 
+  createForm?.addEventListener("submit", handleCreatePost);
+
   loadPosts();
 
   function attachCardHandlers() {
@@ -197,6 +220,37 @@ export function renderPostsPage(appEl) {
         <div class="comments-list">${commentsMarkup}</div>
       </div>
     `;
+  }
+
+  async function handleCreatePost(event) {
+    event.preventDefault();
+    if (!createForm) return;
+
+    const formData = new FormData(createForm);
+    const title = formData.get("title")?.toString().trim() || "";
+    const body = formData.get("body")?.toString().trim() || "";
+    const userIdRaw = formData.get("userId")?.toString().trim() || "";
+    const userId = Number(userIdRaw);
+
+    if (!title || !body || !userIdRaw || Number.isNaN(userId) || userId < 1) {
+      showToast("Please fill all fields with valid data", "error");
+      return;
+    }
+
+    showLoader(createForm);
+    try {
+      const created = await createPost({ title, body, userId });
+      allPosts = [created, ...allPosts];
+      showToast("Post created", "success");
+      createForm.reset();
+      renderPosts(filteredPosts());
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create post";
+      showToast(message, "error");
+    } finally {
+      hideLoader(createForm);
+    }
   }
 }
 

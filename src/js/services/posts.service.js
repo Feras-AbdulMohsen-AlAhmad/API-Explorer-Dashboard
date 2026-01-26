@@ -20,3 +20,9 @@ export async function getPostComments(id) {
   const response = await http.get(url);
   return response.data;
 }
+
+export async function createPost(payload) {
+  const url = buildUrl(BASE, "/posts");
+  const response = await http.post(url, payload);
+  return response.data;
+}
