@@ -1,4 +1,4 @@
-const defaultHeaders = {
+ const defaultHeaders = {
   "Content-Type": "application/json; charset=UTF-8",
 };
 
