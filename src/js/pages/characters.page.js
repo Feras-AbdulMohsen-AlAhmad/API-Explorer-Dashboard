@@ -1,6 +1,7 @@
 import { getCharacters } from "../services/rickmorty.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
+import { openModal } from "../components/modal.js";
 
 export function renderCharactersPage(appEl) {
   if (!appEl) return;
@@ -117,7 +118,12 @@ export function renderCharactersPage(appEl) {
 				${list
           .map(
             (character) => `
-							<article class="card" aria-label="${escapeHtml(character.name)}">
+              <article
+                class="card"
+                data-character-id="${character.id}"
+                tabindex="0"
+                aria-label="${escapeHtml(character.name)}"
+              >
 								<div style="display: flex; gap: var(--space-4); align-items: center;">
 									<img src="${character.image}" alt="${escapeHtml(character.name)}" style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" />
 									<div>
@@ -131,6 +137,8 @@ export function renderCharactersPage(appEl) {
           .join("")}
 			</div>
 		`;
+
+    attachCardHandlers();
   }
 
   function renderPagination() {
@@ -140,6 +148,21 @@ export function renderCharactersPage(appEl) {
     if (nextBtn) nextBtn.disabled = !hasNext;
     if (prevBtn) prevBtn.textContent = hasPrev ? "Prev" : "Prev";
     if (nextBtn) nextBtn.textContent = hasNext ? "Next" : "Next";
+  }
+
+  function attachCardHandlers() {
+    const cards = contentEl.querySelectorAll("[data-character-id]");
+    cards.forEach((card) => {
+      const id = card.getAttribute("data-character-id");
+      if (!id) return;
+      card.addEventListener("click", () => openCharacterModal(Number(id)));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openCharacterModal(Number(id));
+        }
+      });
+    });
   }
 
   function renderError(message) {
@@ -170,6 +193,36 @@ export function renderCharactersPage(appEl) {
       loadPage(nextPage);
     }
   });
+
+  function openCharacterModal(id) {
+    const character = state.results.find((item) => item.id === id);
+    if (!character) return;
+
+    openModal({
+      title: character.name,
+      contentHTML: buildCharacterDetail(character),
+    });
+  }
+
+  function buildCharacterDetail(c) {
+    return `
+      <div class="modal-post">
+        <div style="display:flex; gap: var(--space-4); align-items: flex-start; margin-bottom: var(--space-4);">
+          <img src="${c.image}" alt="${escapeHtml(c.name)}" style="width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-lg);" loading="lazy" />
+          <div style="display: grid; gap: var(--space-2);">
+            <h3>${escapeHtml(c.name)}</h3>
+            <p style="color: var(--color-muted);">Status: ${escapeHtml(c.status)}</p>
+            <p style="color: var(--color-muted);">Species: ${escapeHtml(c.species)}</p>
+            <p style="color: var(--color-muted);">Gender: ${escapeHtml(c.gender)}</p>
+          </div>
+        </div>
+        <div style="display:grid; gap: var(--space-2);">
+          <p><strong>Origin:</strong> ${escapeHtml(c.origin?.name || "Unknown")}</p>
+          <p><strong>Location:</strong> ${escapeHtml(c.location?.name || "Unknown")}</p>
+        </div>
+      </div>
+    `;
+  }
 
   const onSearch = debounce((event) => {
     const name = event.target.value.trim();
