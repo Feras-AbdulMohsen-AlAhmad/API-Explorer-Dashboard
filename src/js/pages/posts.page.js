@@ -9,23 +9,30 @@ export async function renderPostsPage(container) {
     <section class="page">
       <div class="page-header">
         <h1>Posts</h1>
+        <div class="actions" style="width: min(320px, 100%);">
+          <input
+            id="posts-search"
+            class="input"
+            type="search"
+            placeholder="Search posts by title..."
+            aria-label="Search posts by title"
+          />
+        </div>
       </div>
       <div id="posts-content"></div>
     </section>
   `;
 
   const contentEl = container.querySelector("#posts-content");
+  const searchInput = container.querySelector("#posts-search");
+  let allPosts = [];
 
-  try {
-    showLoader(contentEl);
-    const posts = await getAllPosts();
-    hideLoader();
-
-    if (!posts || posts.length === 0) {
+  const renderList = (list) => {
+    if (!list || list.length === 0) {
       contentEl.innerHTML = `
         <div class="empty-state">
           <h3>No posts found</h3>
-          <p>There are no posts available at the moment.</p>
+          <p>Try adjusting your search.</p>
         </div>
       `;
       return;
@@ -33,7 +40,7 @@ export async function renderPostsPage(container) {
 
     contentEl.innerHTML = `
       <div class="cards-grid">
-        ${posts
+        ${list
           .map(
             (post) => `
           <article class="card">
@@ -46,6 +53,13 @@ export async function renderPostsPage(container) {
           .join("")}
       </div>
     `;
+  };
+
+  try {
+    showLoader(contentEl);
+    allPosts = (await getAllPosts()) || [];
+    hideLoader();
+    renderList(allPosts);
   } catch (error) {
     hideLoader();
     showToast(error.message || "Failed to load posts", "error");
@@ -55,6 +69,19 @@ export async function renderPostsPage(container) {
         <p>${escapeHtml(error.message || "Something went wrong")}</p>
       </div>
     `;
+    return;
+  }
+
+  const handleSearch = debounce((event) => {
+    const term = event.target.value.trim().toLowerCase();
+    const filtered = allPosts.filter((post) =>
+      post.title.toLowerCase().includes(term),
+    );
+    renderList(filtered);
+  }, 250);
+
+  if (searchInput) {
+    searchInput.addEventListener("input", handleSearch);
   }
 }
 
@@ -62,4 +89,12 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+function debounce(fn, delay = 250) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }
