@@ -2,6 +2,7 @@ import {
   getAllPosts,
   getPostById,
   getPostComments,
+  createPost,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
@@ -24,20 +25,48 @@ export async function renderPostsPage(container) {
           />
         </div>
       </div>
+      <div class="section-block">
+        <form id="create-post-form" class="card" style="display: grid; gap: var(--space-4);">
+          <div>
+            <label for="post-title">Title</label>
+            <input id="post-title" name="title" class="input" required />
+          </div>
+          <div>
+            <label for="post-body">Body</label>
+            <textarea id="post-body" name="body" class="input" rows="3" required></textarea>
+          </div>
+          <div>
+            <label for="post-user">User ID</label>
+            <input id="post-user" name="userId" class="input" type="number" min="1" required />
+          </div>
+          <div class="actions" style="justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Create Post</button>
+          </div>
+        </form>
+      </div>
       <div id="posts-content"></div>
     </section>
   `;
 
   const contentEl = container.querySelector("#posts-content");
   const searchInput = container.querySelector("#posts-search");
+  const createForm = container.querySelector("#create-post-form");
   let allPosts = [];
+  let currentTerm = "";
 
-  const renderList = (list) => {
+  const getFilteredPosts = () => {
+    if (!currentTerm) return allPosts;
+    const term = currentTerm.toLowerCase();
+    return allPosts.filter((post) => post.title.toLowerCase().includes(term));
+  };
+
+  const renderList = () => {
+    const list = getFilteredPosts();
     if (!list || list.length === 0) {
       contentEl.innerHTML = `
         <div class="empty-state">
           <h3>No posts found</h3>
-          <p>Try adjusting your search.</p>
+          <p>${currentTerm ? "Try adjusting your search." : "There are no posts available at the moment."}</p>
         </div>
       `;
       return;
@@ -65,7 +94,7 @@ export async function renderPostsPage(container) {
     showLoader(contentEl);
     allPosts = (await getAllPosts()) || [];
     hideLoader();
-    renderList(allPosts);
+    renderList();
   } catch (error) {
     hideLoader();
     showToast(error.message || "Failed to load posts", "error");
@@ -79,15 +108,16 @@ export async function renderPostsPage(container) {
   }
 
   const handleSearch = debounce((event) => {
-    const term = event.target.value.trim().toLowerCase();
-    const filtered = allPosts.filter((post) =>
-      post.title.toLowerCase().includes(term),
-    );
-    renderList(filtered);
+    currentTerm = event.target.value.trim();
+    renderList();
   }, 250);
 
   if (searchInput) {
     searchInput.addEventListener("input", handleSearch);
+  }
+
+  if (createForm) {
+    createForm.addEventListener("submit", handleCreatePost);
   }
 
   function attachCardClicks() {
@@ -151,6 +181,33 @@ export async function renderPostsPage(container) {
           <p>${escapeHtml(error.message || "Something went wrong")}</p>
         </div>
       `;
+    }
+  }
+
+  async function handleCreatePost(event) {
+    event.preventDefault();
+    const formData = new FormData(createForm);
+    const title = (formData.get("title") || "").toString().trim();
+    const body = (formData.get("body") || "").toString().trim();
+    const userId = Number(formData.get("userId"));
+
+    if (!title || !body || Number.isNaN(userId)) {
+      showToast("Please fill in all fields", "error");
+      return;
+    }
+
+    showLoader(contentEl);
+    try {
+      const created = await createPost({ title, body, userId });
+      // Simulate insert at the top
+      allPosts = [created, ...allPosts];
+      renderList();
+      showToast("Post created", "success");
+      createForm.reset();
+    } catch (error) {
+      showToast(error.message || "Failed to create post", "error");
+    } finally {
+      hideLoader();
     }
   }
 }
