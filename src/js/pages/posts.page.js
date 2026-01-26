@@ -1,6 +1,11 @@
-import { getAllPosts } from "../services/posts.service.js";
+import {
+  getAllPosts,
+  getPostById,
+  getPostComments,
+} from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
+import { openModal } from "../components/modal.js";
 
 const DEBOUNCE_MS = 300;
 
@@ -72,7 +77,12 @@ export function renderPostsPage(appEl) {
         ${posts
           .map(
             (post) => `
-              <article class="card" aria-label="Post ${escapeHtml(post.title)}">
+              <article
+                class="card"
+                data-post-id="${post.id}"
+                tabindex="0"
+                aria-label="Post ${escapeHtml(post.title)}"
+              >
                 <h3>${escapeHtml(post.title)}</h3>
                 <p>${escapeHtml(snippet(post.body))}</p>
                 <small>Post ID: ${post.id}</small>
@@ -82,6 +92,8 @@ export function renderPostsPage(appEl) {
           .join("")}
       </div>
     `;
+
+    attachCardHandlers();
   }
 
   function renderError(message) {
@@ -107,6 +119,85 @@ export function renderPostsPage(appEl) {
   searchInput?.addEventListener("input", onSearch);
 
   loadPosts();
+
+  function attachCardHandlers() {
+    const cards = contentEl.querySelectorAll("[data-post-id]");
+    cards.forEach((card) => {
+      const postId = card.getAttribute("data-post-id");
+      if (!postId) return;
+      card.addEventListener("click", () => openPostModal(postId));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openPostModal(postId);
+        }
+      });
+    });
+  }
+
+  async function openPostModal(postId) {
+    openModal({
+      title: `Post #${postId}`,
+      contentHTML: `<div class="modal-post" id="modal-post"><p style="color: var(--color-muted);">Loading post...</p></div>`,
+    });
+
+    const modalBody = document.querySelector(".modal-body");
+    if (!modalBody) return;
+
+    showLoader(modalBody);
+    try {
+      const [post, comments] = await Promise.all([
+        getPostById(postId),
+        getPostComments(postId),
+      ]);
+      hideLoader();
+      renderModalContent(modalBody, post, comments || []);
+    } catch (error) {
+      hideLoader();
+      const message =
+        error instanceof Error ? error.message : "Failed to load post";
+      showToast(message, "error");
+      modalBody.innerHTML = `
+        <div class="error-state">
+          <h3>Unable to load post</h3>
+          <p>${escapeHtml(message)}</p>
+        </div>
+      `;
+    }
+  }
+
+  function renderModalContent(container, post, comments) {
+    if (!container) return;
+    const commentsMarkup = comments.length
+      ? comments
+          .map(
+            (comment) => `
+              <div class="card" style="padding: var(--space-4); margin-bottom: var(--space-3);">
+                <div class="flex justify-between align-center" style="gap: var(--space-3);">
+                  <strong>${escapeHtml(comment.name)}</strong>
+                  <small style="color: var(--color-muted);">${escapeHtml(comment.email)}</small>
+                </div>
+                <p style="margin-top: var(--space-2);">${escapeHtml(comment.body)}</p>
+              </div>
+            `,
+          )
+          .join("")
+      : `
+          <div class="empty-state">
+            <h3>No comments</h3>
+            <p>Be the first to comment.</p>
+          </div>
+        `;
+
+    container.innerHTML = `
+      <div class="modal-post">
+        <h3>${escapeHtml(post.title)}</h3>
+        <p style="margin-bottom: var(--space-4);">${escapeHtml(post.body)}</p>
+        <h4 style="margin-bottom: var(--space-3);">Comments (${comments.length})</h4>
+        <div class="comments-list">${commentsMarkup}</div>
+      </div>
+    `;
+  }
 }
 
 function snippet(text = "", length = 120) {
