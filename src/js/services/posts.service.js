@@ -26,3 +26,15 @@ export async function createPost(payload) {
   const response = await http.post(url, payload);
   return response.data;
 }
+
+export async function updatePostPut(id, payload) {
+  const url = buildUrl(BASE, `/posts/${id}`);
+  const response = await http.put(url, payload);
+  return response.data;
+}
+
+export async function updatePostPatch(id, payload) {
+  const url = buildUrl(BASE, `/posts/${id}`);
+  const response = await http.patch(url, payload);
+  return response.data;
+}

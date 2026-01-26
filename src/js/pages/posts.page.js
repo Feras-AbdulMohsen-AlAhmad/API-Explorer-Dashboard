@@ -3,6 +3,8 @@ import {
   getPostById,
   getPostComments,
   createPost,
+  updatePostPatch,
+  updatePostPut,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
@@ -53,6 +55,8 @@ export async function renderPostsPage(container) {
   const createForm = container.querySelector("#create-post-form");
   let allPosts = [];
   let currentTerm = "";
+  let activePost = null;
+  let activeComments = [];
 
   const getFilteredPosts = () => {
     if (!currentTerm) return allPosts;
@@ -152,26 +156,10 @@ export async function renderPostsPage(container) {
       ]);
       hideLoader();
 
-      modalBody.innerHTML = `
-        <div class="modal-post">
-          <h3>${escapeHtml(post.title)}</h3>
-          <p>${escapeHtml(post.body)}</p>
-          <h4>Comments (${comments.length})</h4>
-          <div class="comments-list">
-            ${comments
-              .map(
-                (comment) => `
-                  <div class="card" style="padding: var(--space-4); margin-bottom: var(--space-3);">
-                    <strong>${escapeHtml(comment.name)}</strong>
-                    <p>${escapeHtml(comment.body)}</p>
-                    <small>${escapeHtml(comment.email)}</small>
-                  </div>
-                `,
-              )
-              .join("")}
-          </div>
-        </div>
-      `;
+      activePost = post;
+      activeComments = comments;
+
+      renderModalContent(post, comments);
     } catch (error) {
       hideLoader();
       showToast(error.message || "Failed to load post", "error");
@@ -181,6 +169,113 @@ export async function renderPostsPage(container) {
           <p>${escapeHtml(error.message || "Something went wrong")}</p>
         </div>
       `;
+    }
+  }
+
+  function renderModalContent(post, comments) {
+    const modalBody = document.querySelector(".modal-body");
+    if (!modalBody) return;
+    modalBody.innerHTML = `
+      <div class="modal-post">
+        <div class="actions" style="justify-content: flex-end; margin-bottom: var(--space-3);">
+          <button class="btn btn-secondary" id="edit-post-btn">Edit</button>
+        </div>
+        <h3>${escapeHtml(post.title)}</h3>
+        <p>${escapeHtml(post.body)}</p>
+        <h4>Comments (${comments.length})</h4>
+        <div class="comments-list">
+          ${comments
+            .map(
+              (comment) => `
+                <div class="card" style="padding: var(--space-4); margin-bottom: var(--space-3);">
+                  <strong>${escapeHtml(comment.name)}</strong>
+                  <p>${escapeHtml(comment.body)}</p>
+                  <small>${escapeHtml(comment.email)}</small>
+                </div>
+              `,
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+
+    const editBtn = modalBody.querySelector("#edit-post-btn");
+    if (editBtn) {
+      editBtn.addEventListener("click", () => openEditForm(post));
+    }
+  }
+
+  function openEditForm(post) {
+    const modalBody = document.querySelector(".modal-body");
+    if (!modalBody) return;
+    modalBody.innerHTML = `
+      <form id="edit-post-form" class="card" style="display: grid; gap: var(--space-4);">
+        <div>
+          <label for="edit-title">Title</label>
+          <input id="edit-title" name="title" class="input" value="${escapeHtml(post.title)}" required />
+        </div>
+        <div>
+          <label for="edit-body">Body</label>
+          <textarea id="edit-body" name="body" class="input" rows="4" required>${escapeHtml(post.body)}</textarea>
+        </div>
+        <div>
+          <label for="edit-user">User ID</label>
+          <input id="edit-user" name="userId" class="input" type="number" min="1" value="${post.userId || 1}" required />
+        </div>
+        <div class="actions" style="justify-content: flex-end; gap: var(--space-3);">
+          <button type="button" class="btn btn-ghost" id="cancel-edit">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    `;
+
+    const form = modalBody.querySelector("#edit-post-form");
+    const cancelBtn = modalBody.querySelector("#cancel-edit");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        if (activePost && activeComments) {
+          renderModalContent(activePost, activeComments);
+        }
+      });
+    }
+    if (form) {
+      form.addEventListener("submit", (event) =>
+        handleEditSubmit(event, post.id),
+      );
+    }
+  }
+
+  async function handleEditSubmit(event, postId) {
+    event.preventDefault();
+    const modalBody = document.querySelector(".modal-body");
+    if (!modalBody) return;
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const title = (formData.get("title") || "").toString().trim();
+    const body = (formData.get("body") || "").toString().trim();
+    const userId = Number(formData.get("userId"));
+
+    if (!title || !body || Number.isNaN(userId)) {
+      showToast("Please fill in all fields", "error");
+      return;
+    }
+
+    showLoader(modalBody);
+    try {
+      const updated = await updatePostPatch(postId, { title, body, userId });
+      // update local cache
+      allPosts = allPosts.map((p) =>
+        p.id === updated.id ? { ...p, ...updated } : p,
+      );
+      activePost = { ...activePost, ...updated };
+      renderList();
+      renderModalContent(activePost, activeComments);
+      showToast("Post updated", "success");
+    } catch (error) {
+      showToast(error.message || "Failed to update post", "error");
+    } finally {
+      hideLoader();
     }
   }
 
