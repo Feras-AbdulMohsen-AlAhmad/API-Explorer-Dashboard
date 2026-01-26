@@ -5,10 +5,11 @@ import {
   createPost,
   updatePostPatch,
   updatePostPut,
+  deletePost,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
-import { openModal } from "../components/modal.js";
+import { openModal, closeModal } from "../components/modal.js";
 
 export async function renderPostsPage(container) {
   if (!container) return;
@@ -177,8 +178,9 @@ export async function renderPostsPage(container) {
     if (!modalBody) return;
     modalBody.innerHTML = `
       <div class="modal-post">
-        <div class="actions" style="justify-content: flex-end; margin-bottom: var(--space-3);">
+        <div class="actions" style="justify-content: flex-end; margin-bottom: var(--space-3); gap: var(--space-3);">
           <button class="btn btn-secondary" id="edit-post-btn">Edit</button>
+          <button class="btn btn-ghost" id="delete-post-btn" style="color: var(--color-danger);">Delete</button>
         </div>
         <h3>${escapeHtml(post.title)}</h3>
         <p>${escapeHtml(post.body)}</p>
@@ -200,8 +202,12 @@ export async function renderPostsPage(container) {
     `;
 
     const editBtn = modalBody.querySelector("#edit-post-btn");
+    const deleteBtn = modalBody.querySelector("#delete-post-btn");
     if (editBtn) {
       editBtn.addEventListener("click", () => openEditForm(post));
+    }
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => handleDeletePost(post.id));
     }
   }
 
@@ -303,6 +309,28 @@ export async function renderPostsPage(container) {
       showToast(error.message || "Failed to create post", "error");
     } finally {
       hideLoader();
+    }
+  }
+
+  async function handleDeletePost(postId) {
+    if (!postId) return;
+    const confirmed = window.confirm("Delete this post?");
+    if (!confirmed) return;
+
+    const modalBody = document.querySelector(".modal-body");
+    showLoader(modalBody || document.body);
+    try {
+      await deletePost(postId);
+      allPosts = allPosts.filter((p) => p.id !== Number(postId));
+      activePost = null;
+      activeComments = [];
+      renderList();
+      closeModal();
+      showToast("Post deleted", "success");
+    } catch (error) {
+      showToast(error.message || "Failed to delete post", "error");
+    } finally {
+      hideLoader(modalBody || document.body);
     }
   }
 }
