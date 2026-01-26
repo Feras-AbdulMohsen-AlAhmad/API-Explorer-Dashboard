@@ -12,6 +12,37 @@ export function renderCharactersPage(appEl) {
 					<h1>Characters</h1>
 					<p style="color: var(--color-muted);">Rick and Morty multiverse characters.</p>
 				</div>
+        <div class="actions" style="flex-wrap: wrap; gap: var(--space-3);">
+          <input
+            id="char-search"
+            class="input"
+            type="search"
+            placeholder="Search by name..."
+            aria-label="Search characters by name"
+            style="width: min(220px, 100%);"
+          />
+          <input
+            id="char-species"
+            class="input"
+            type="text"
+            placeholder="Species"
+            aria-label="Filter by species"
+            style="width: min(180px, 100%);"
+          />
+          <select id="char-status" class="input" aria-label="Filter by status" style="width: min(150px, 100%);">
+            <option value="">Any status</option>
+            <option value="alive">Alive</option>
+            <option value="dead">Dead</option>
+            <option value="unknown">Unknown</option>
+          </select>
+          <select id="char-gender" class="input" aria-label="Filter by gender" style="width: min(150px, 100%);">
+            <option value="">Any gender</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="genderless">Genderless</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
 				<div class="actions" id="char-pagination" style="gap: var(--space-3);">
 					<button class="btn btn-secondary" id="prev-page">Prev</button>
 					<button class="btn btn-secondary" id="next-page">Next</button>
@@ -22,6 +53,10 @@ export function renderCharactersPage(appEl) {
 	`;
 
   const contentEl = appEl.querySelector("#characters-content");
+  const searchInput = appEl.querySelector("#char-search");
+  const speciesInput = appEl.querySelector("#char-species");
+  const statusSelect = appEl.querySelector("#char-status");
+  const genderSelect = appEl.querySelector("#char-gender");
   const prevBtn = appEl.querySelector("#prev-page");
   const nextBtn = appEl.querySelector("#next-page");
 
@@ -29,17 +64,24 @@ export function renderCharactersPage(appEl) {
     page: 1,
     info: null,
     results: [],
+    filters: {
+      name: "",
+      status: "",
+      species: "",
+      gender: "",
+    },
   };
 
   async function loadPage(page = 1) {
     if (!contentEl) return;
     showLoader(contentEl);
     try {
-      const data = await getCharacters({ page });
+      const data = await getCharacters({ page, ...state.filters });
       state = {
         page,
         info: data?.info || null,
         results: data?.results || [],
+        filters: state.filters,
       };
       hideLoader();
       renderCharacters(state.results);
@@ -51,6 +93,12 @@ export function renderCharactersPage(appEl) {
       showToast(message, "error");
       renderError(message);
     }
+  }
+
+  function updateFilters(nextFilters, resetPage = true) {
+    state.filters = { ...state.filters, ...nextFilters };
+    const nextPage = resetPage ? 1 : state.page;
+    loadPage(nextPage);
   }
 
   function renderCharacters(list) {
@@ -123,6 +171,25 @@ export function renderCharactersPage(appEl) {
     }
   });
 
+  const onSearch = debounce((event) => {
+    const name = event.target.value.trim();
+    updateFilters({ name }, true);
+  }, 300);
+
+  searchInput?.addEventListener("input", onSearch);
+  speciesInput?.addEventListener("change", (event) => {
+    const species = event.target.value.trim();
+    updateFilters({ species }, true);
+  });
+  statusSelect?.addEventListener("change", (event) => {
+    const status = event.target.value;
+    updateFilters({ status }, true);
+  });
+  genderSelect?.addEventListener("change", (event) => {
+    const gender = event.target.value;
+    updateFilters({ gender }, true);
+  });
+
   loadPage(1);
 }
 
@@ -133,4 +200,12 @@ function escapeHtml(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function debounce(fn, delay = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => fn(...args), delay);
+  };
 }
