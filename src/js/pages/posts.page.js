@@ -3,6 +3,8 @@ import {
   getPostById,
   getPostComments,
   createPost,
+  updatePostPatch,
+  updatePostPut,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
@@ -59,6 +61,8 @@ export function renderPostsPage(appEl) {
 
   let allPosts = [];
   let currentTerm = "";
+  let modalPost = null;
+  let modalComments = [];
 
   const filteredPosts = () => {
     if (!currentTerm) return allPosts;
@@ -191,6 +195,8 @@ export function renderPostsPage(appEl) {
 
   function renderModalContent(container, post, comments) {
     if (!container) return;
+    modalPost = post;
+    modalComments = comments;
     const commentsMarkup = comments.length
       ? comments
           .map(
@@ -214,12 +220,46 @@ export function renderPostsPage(appEl) {
 
     container.innerHTML = `
       <div class="modal-post">
+        <div class="actions" style="justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-3);">
+          <button class="btn btn-secondary" id="edit-post-btn">Edit</button>
+        </div>
         <h3>${escapeHtml(post.title)}</h3>
         <p style="margin-bottom: var(--space-4);">${escapeHtml(post.body)}</p>
         <h4 style="margin-bottom: var(--space-3);">Comments (${comments.length})</h4>
         <div class="comments-list">${commentsMarkup}</div>
       </div>
     `;
+
+    const editBtn = container.querySelector("#edit-post-btn");
+    editBtn?.addEventListener("click", () => renderEditForm(container, post));
+  }
+
+  function renderEditForm(container, post) {
+    if (!container) return;
+    container.innerHTML = `
+      <form id="edit-post-form" class="card" style="display: grid; gap: var(--space-4);">
+        <div>
+          <label for="edit-post-title">Title</label>
+          <input id="edit-post-title" name="title" class="input" required value="${escapeHtml(post.title)}" />
+        </div>
+        <div>
+          <label for="edit-post-body">Body</label>
+          <textarea id="edit-post-body" name="body" class="input" rows="4" required>${escapeHtml(post.body)}</textarea>
+        </div>
+        <div class="actions" style="justify-content: flex-end; gap: var(--space-3);">
+          <button type="button" class="btn btn-ghost" id="cancel-edit">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    `;
+
+    const form = container.querySelector("#edit-post-form");
+    const cancelBtn = container.querySelector("#cancel-edit");
+
+    cancelBtn?.addEventListener("click", () =>
+      renderModalContent(container, modalPost || post, modalComments || []),
+    );
+    form?.addEventListener("submit", (event) => handleUpdatePost(event, post.id, container));
   }
 
   async function handleCreatePost(event) {
@@ -251,6 +291,43 @@ export function renderPostsPage(appEl) {
     } finally {
       hideLoader(createForm);
     }
+  }
+
+  async function handleUpdatePost(event, id, container) {
+    event.preventDefault();
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const formData = new FormData(form);
+    const title = formData.get("title")?.toString().trim() || "";
+    const body = formData.get("body")?.toString().trim() || "";
+
+    if (!title || !body) {
+      showToast("Please fill all fields", "error");
+      return;
+    }
+
+    showLoader(form);
+    try {
+      const updated = await updatePostPatch(id, { title, body });
+      const merged = { ...(modalPost || {}), ...updated, title, body, id: Number(id) };
+      modalPost = merged;
+      updateLocalPost(merged);
+      showToast("Post updated", "success");
+      renderModalContent(container, merged, modalComments || []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update post";
+      showToast(message, "error");
+    } finally {
+      hideLoader(form);
+    }
+  }
+
+  function updateLocalPost(updated) {
+    allPosts = allPosts.map((post) =>
+      post.id === updated.id ? { ...post, ...updated } : post,
+    );
+    renderPosts(filteredPosts());
   }
 }
 
