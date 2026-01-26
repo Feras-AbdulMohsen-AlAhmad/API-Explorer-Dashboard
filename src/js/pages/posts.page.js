@@ -5,10 +5,11 @@ import {
   createPost,
   updatePostPatch,
   updatePostPut,
+  deletePost,
 } from "../services/posts.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
-import { openModal } from "../components/modal.js";
+import { openModal, closeModal } from "../components/modal.js";
 
 const DEBOUNCE_MS = 300;
 
@@ -222,6 +223,7 @@ export function renderPostsPage(appEl) {
       <div class="modal-post">
         <div class="actions" style="justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-3);">
           <button class="btn btn-secondary" id="edit-post-btn">Edit</button>
+          <button class="btn btn-ghost" id="delete-post-btn" style="color: var(--color-danger);">Delete</button>
         </div>
         <h3>${escapeHtml(post.title)}</h3>
         <p style="margin-bottom: var(--space-4);">${escapeHtml(post.body)}</p>
@@ -231,7 +233,11 @@ export function renderPostsPage(appEl) {
     `;
 
     const editBtn = container.querySelector("#edit-post-btn");
+    const deleteBtn = container.querySelector("#delete-post-btn");
     editBtn?.addEventListener("click", () => renderEditForm(container, post));
+    deleteBtn?.addEventListener("click", () =>
+      renderDeleteConfirm(container, post),
+    );
   }
 
   function renderEditForm(container, post) {
@@ -259,7 +265,34 @@ export function renderPostsPage(appEl) {
     cancelBtn?.addEventListener("click", () =>
       renderModalContent(container, modalPost || post, modalComments || []),
     );
-    form?.addEventListener("submit", (event) => handleUpdatePost(event, post.id, container));
+    form?.addEventListener("submit", (event) =>
+      handleUpdatePost(event, post.id, container),
+    );
+  }
+
+  function renderDeleteConfirm(container, post) {
+    if (!container) return;
+    container.innerHTML = `
+      <div class="card" style="display: grid; gap: var(--space-4);">
+        <div>
+          <h3>Delete this post?</h3>
+          <p style="color: var(--color-muted);">This action will remove the post from the list.</p>
+        </div>
+        <div class="actions" style="justify-content: flex-end; gap: var(--space-3);">
+          <button type="button" class="btn btn-ghost" id="cancel-delete">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirm-delete">Delete</button>
+        </div>
+      </div>
+    `;
+
+    const cancelBtn = container.querySelector("#cancel-delete");
+    const confirmBtn = container.querySelector("#confirm-delete");
+    cancelBtn?.addEventListener("click", () =>
+      renderModalContent(container, modalPost || post, modalComments || []),
+    );
+    confirmBtn?.addEventListener("click", () =>
+      handleDeletePost(post.id, container),
+    );
   }
 
   async function handleCreatePost(event) {
@@ -310,16 +343,42 @@ export function renderPostsPage(appEl) {
     showLoader(form);
     try {
       const updated = await updatePostPatch(id, { title, body });
-      const merged = { ...(modalPost || {}), ...updated, title, body, id: Number(id) };
+      const merged = {
+        ...(modalPost || {}),
+        ...updated,
+        title,
+        body,
+        id: Number(id),
+      };
       modalPost = merged;
       updateLocalPost(merged);
       showToast("Post updated", "success");
       renderModalContent(container, merged, modalComments || []);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update post";
+      const message =
+        error instanceof Error ? error.message : "Failed to update post";
       showToast(message, "error");
     } finally {
       hideLoader(form);
+    }
+  }
+
+  async function handleDeletePost(id, container) {
+    if (!id) return;
+    if (!container) return;
+    showLoader(container);
+    try {
+      await deletePost(id);
+      allPosts = allPosts.filter((post) => post.id !== Number(id));
+      renderPosts(filteredPosts());
+      showToast("Post deleted", "success");
+      closeModal();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete post";
+      showToast(message, "error");
+    } finally {
+      hideLoader(container);
     }
   }
 

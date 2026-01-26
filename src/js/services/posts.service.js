@@ -38,3 +38,9 @@ export async function updatePostPatch(id, payload) {
   const response = await http.patch(url, payload);
   return response.data;
 }
+
+export async function deletePost(id) {
+  const url = buildUrl(BASE, `/posts/${id}`);
+  const response = await http.del(url);
+  return response.data;
+}
