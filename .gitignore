@@ -3,6 +3,12 @@ node_modules/
 npm-debug.log
 yarn-error.log
 package-lock.json
+
+# API Configuration (local keys should never be committed)
+src/js/config.local.js
+config.local.js
+.env
+.env.local
 yarn.lock
 
 # Build & Distribution
