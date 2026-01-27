@@ -11,4 +11,4 @@
 
 // Weatherstack API Configuration
 // Get your free API key at: https://weatherstack.com/
-export const WEATHERSTACK_ACCESS_KEY = "YOUR_KEY_HERE";
+export const WEATHERSTACK_ACCESS_KEY = "70a444b1da97fa4af24fa0881f06e2ca";
