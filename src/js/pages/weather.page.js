@@ -1,12 +1,81 @@
 import {
   getCurrentByQuery,
   getCurrentByCoords,
-  getLocationSuggestions,
+  getCurrentByAutoIP,
 } from "../services/weather.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 
-const DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 250; // 250-300ms debounce for local autocomplete
+const MIN_SEARCH_LENGTH = 2; // Minimum 2 characters for suggestions
+const MAX_SEARCH_HISTORY = 10; // Store last 10 searches
+const SEARCH_HISTORY_KEY = "weather-search-history";
+
+/**
+ * Get search history from localStorage
+ * @returns {Array<string>} Array of recent searches (most-recent-first)
+ */
+function getSearchHistory() {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Add search to history, avoiding duplicates (dedupe)
+ * @param {string} query - Search query
+ */
+function addToSearchHistory(query) {
+  if (!query || query.trim().length < 2) return;
+
+  const trimmed = query.trim();
+  let history = getSearchHistory();
+
+  // Remove if already exists (dedupe)
+  history = history.filter(
+    (item) => item.toLowerCase() !== trimmed.toLowerCase(),
+  );
+
+  // Add to front (most-recent-first)
+  history.unshift(trimmed);
+
+  // Keep only last 10
+  history = history.slice(0, MAX_SEARCH_HISTORY);
+
+  try {
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch (e) {
+    // localStorage full or unavailable - silently fail
+  }
+}
+
+/**
+ * Clear all search history
+ */
+function clearSearchHistory() {
+  try {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+  } catch (e) {
+    // silently fail
+  }
+}
+
+/**
+ * Filter search history by query (case-insensitive partial match)
+ * @param {string} query - Search query
+ * @returns {Array<string>} Matching searches
+ */
+function filterSearchHistory(query) {
+  if (!query || query.trim().length < MIN_SEARCH_LENGTH) return [];
+
+  const lowerQuery = query.trim().toLowerCase();
+  return getSearchHistory().filter((item) =>
+    item.toLowerCase().includes(lowerQuery),
+  );
+}
 
 export function renderWeatherPage(appEl) {
   if (!appEl) return;
@@ -21,7 +90,7 @@ export function renderWeatherPage(appEl) {
       </div>
       <div class="section-block">
         <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; position: relative;">
+          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; position: relative; align-items: center;">
             <div style="flex: 1; min-width: 200px; position: relative;">
               <input
                 id="weather-search"
@@ -51,8 +120,19 @@ export function renderWeatherPage(appEl) {
                 "
               ></div>
             </div>
-            <button id="weather-search-btn" class="btn btn-primary">Search</button>
-            <button id="weather-location-btn" class="btn btn-secondary">Use My Location</button>
+            <div style="display: flex; gap: var(--space-2); align-items: center; white-space: nowrap;">
+              <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer; user-select: none;">
+                <input
+                  id="weather-units-toggle"
+                  type="checkbox"
+                  style="cursor: pointer;"
+                  title="Toggle between Celsius and Fahrenheit"
+                />
+                <span id="weather-units-label" style="font-size: var(--font-size-sm); font-weight: 500;">Celsius</span>
+              </label>
+              <button id="weather-search-btn" class="btn btn-primary">Search</button>
+              <button id="weather-location-btn" class="btn btn-secondary">Use My Location</button>
+            </div>
           </div>
         </div>
       </div>
@@ -64,9 +144,35 @@ export function renderWeatherPage(appEl) {
   const searchInput = appEl.querySelector("#weather-search");
   const searchBtn = appEl.querySelector("#weather-search-btn");
   const locationBtn = appEl.querySelector("#weather-location-btn");
+  const unitsToggle = appEl.querySelector("#weather-units-toggle");
+  const unitsLabel = appEl.querySelector("#weather-units-label");
   const suggestionsContainer = appEl.querySelector("#weather-suggestions");
   let debounceTimer;
   let suggestions = [];
+
+  // Initialize units from localStorage (default: metric/Celsius)
+  let currentUnits = localStorage.getItem("weather-units") || "m";
+  unitsToggle.checked = currentUnits === "f";
+  unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Celsius";
+
+  // Listen for units toggle changes
+  unitsToggle?.addEventListener("change", (e) => {
+    currentUnits = e.target.checked ? "f" : "m";
+    localStorage.setItem("weather-units", currentUnits);
+    unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Celsius";
+    showToast(
+      `Switched to ${currentUnits === "f" ? "Fahrenheit" : "Celsius"}`,
+      "success",
+    );
+    // Refresh current weather if any is displayed
+    const retryBtn = contentEl?.querySelector("#retry-btn");
+    if (!retryBtn && contentEl?.querySelector(".card")) {
+      const query = searchInput?.value?.trim();
+      if (query) {
+        searchWeather(query);
+      }
+    }
+  });
 
   function renderWeatherCard(data) {
     if (!data || !data.current || !data.location) {
@@ -80,8 +186,9 @@ export function renderWeatherPage(appEl) {
     }
 
     const { current, location } = data;
-    const tempUnit = current.temperature ? "°C" : "°F";
-    const windUnit = current.wind_speed ? "m/s" : "mph";
+    // Display units based on current selection
+    const tempUnit = currentUnits === "f" ? "°F" : "°C";
+    const windUnit = currentUnits === "f" ? "mph" : "m/s";
 
     contentEl.innerHTML = `
       <div style="display: grid; gap: var(--space-5);">
@@ -177,13 +284,15 @@ export function renderWeatherPage(appEl) {
     showLoader(contentEl);
 
     try {
-      const data = await getCurrentByQuery(query);
+      const data = await getCurrentByQuery(query, { units: currentUnits });
       hideLoader();
       renderWeatherCard(data);
       showToast(
         `Weather for ${data.location.name} loaded successfully`,
         "success",
       );
+      // Add to search history after successful search
+      addToSearchHistory(query);
     } catch (error) {
       hideLoader();
       const message =
@@ -213,18 +322,42 @@ export function renderWeatherPage(appEl) {
           border-bottom: 1px solid var(--color-border);
           cursor: pointer;
           transition: background-color 0.2s;
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
         "
         onmouseover="this.style.backgroundColor = 'var(--color-bg-secondary)';"
         onmouseout="this.style.backgroundColor = 'transparent';"
       >
-        <div style="font-weight: 500;">${item.display}</div>
-        <div style="font-size: var(--font-size-sm); color: var(--color-muted); margin-top: 4px;">
-          ${item.lat.toFixed(2)}°, ${item.lon.toFixed(2)}°
-        </div>
+        <span style="color: var(--color-muted); font-size: var(--font-size-sm);">🕐</span>
+        <span style="font-weight: 500;">${item}</span>
       </div>
     `,
       )
       .join("");
+
+    // Add clear history button if there are items
+    if (items.length > 0) {
+      suggestionsContainer.innerHTML += `
+        <div style="
+          padding: var(--space-2) var(--space-3);
+          border-top: 1px solid var(--color-border);
+          text-align: center;
+        ">
+          <button id="clear-history-btn" style="
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            text-decoration: underline;
+            padding: var(--space-1) 0;
+          ">
+            Clear recent searches
+          </button>
+        </div>
+      `;
+    }
 
     suggestionsContainer.style.display = "block";
 
@@ -237,42 +370,59 @@ export function renderWeatherPage(appEl) {
           selectSuggestion(suggestions[index]);
         });
       });
+
+    // Add clear history handler
+    const clearBtn = suggestionsContainer.querySelector("#clear-history-btn");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        clearSearchHistory();
+        suggestions = [];
+        suggestionsContainer.style.display = "none";
+        suggestionsContainer.innerHTML = "";
+        showToast("Recent searches cleared", "success");
+      });
+    }
   }
 
   function selectSuggestion(item) {
     if (!item || !searchInput) return;
 
-    searchInput.value = item.display;
+    searchInput.value = item;
     suggestionsContainer.style.display = "none";
     suggestionsContainer.innerHTML = "";
     suggestions = [];
 
-    // Search using the coordinates
-    searchWeather(`${item.lat},${item.lon}`);
+    // Search with the selected item
+    searchWeather(item);
   }
 
   async function fetchSuggestions(query) {
-    if (!query || query.trim().length < 2) {
+    if (!query || query.trim().length < MIN_SEARCH_LENGTH) {
+      // Show all recent searches if input is empty or minimal
+      if (query.trim().length === 0) {
+        const allHistory = getSearchHistory();
+        suggestions = allHistory;
+        renderSuggestions(allHistory);
+        return;
+      }
       suggestionsContainer.style.display = "none";
       suggestionsContainer.innerHTML = "";
       suggestions = [];
       return;
     }
 
-    try {
-      const items = await getLocationSuggestions(query);
-      suggestions = items;
-      renderSuggestions(items);
-    } catch (error) {
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
-      suggestions = [];
-    }
+    // Filter history based on query (no API calls - local only)
+    const items = filterSearchHistory(query);
+    suggestions = items;
+    renderSuggestions(items);
   }
 
   function useGeolocation() {
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by your browser", "error");
+      // Fallback to IP-based location
+      useIPLocation();
       return;
     }
 
@@ -283,7 +433,9 @@ export function renderWeatherPage(appEl) {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const data = await getCurrentByCoords(latitude, longitude);
+          const data = await getCurrentByCoords(latitude, longitude, {
+            units: currentUnits,
+          });
           hideLoader();
           renderWeatherCard(data);
           showToast(
@@ -301,18 +453,48 @@ export function renderWeatherPage(appEl) {
         }
       },
       (error) => {
-        hideLoader();
-        const errorMsg =
-          {
-            1: "Location access denied. Please enable location services.",
-            2: "Unable to retrieve your location. Try searching instead.",
-            3: "Location request timed out. Try searching instead.",
-          }[error.code] || "Failed to get your location";
+        // Geolocation denied or failed - fallback to IP-based location
+        if (error.code === 1) {
+          showToast(
+            "Location access denied. Fetching weather by IP address...",
+            "info",
+          );
+          useIPLocation();
+        } else {
+          hideLoader();
+          const errorMsg =
+            {
+              2: "Unable to retrieve your location. Fetching weather by IP address...",
+              3: "Location request timed out. Fetching weather by IP address...",
+            }[error.code] ||
+            "Failed to get your location. Fetching weather by IP address...";
 
-        showToast(errorMsg, "error");
-        renderError(errorMsg);
+          showToast(errorMsg, "info");
+          useIPLocation();
+        }
       },
     );
+  }
+
+  async function useIPLocation() {
+    if (!contentEl) return;
+    showLoader(contentEl);
+
+    try {
+      const data = await getCurrentByAutoIP({ units: currentUnits });
+      hideLoader();
+      renderWeatherCard(data);
+      showToast(
+        `Weather for ${data.location.name} (based on IP location) loaded successfully`,
+        "success",
+      );
+    } catch (error) {
+      hideLoader();
+      const message =
+        error instanceof Error ? error.message : "Failed to load weather data";
+      showToast(message, "error");
+      renderError(message);
+    }
   }
 
   searchBtn?.addEventListener("click", () => {
@@ -337,7 +519,7 @@ export function renderWeatherPage(appEl) {
     clearTimeout(debounceTimer);
     const query = e.target.value.trim();
 
-    if (query.length < 2) {
+    if (query.length < MIN_SEARCH_LENGTH) {
       suggestionsContainer.style.display = "none";
       suggestionsContainer.innerHTML = "";
       suggestions = [];
