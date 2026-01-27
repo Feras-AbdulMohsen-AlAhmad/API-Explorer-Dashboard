@@ -1,4 +1,4 @@
-# 🌐 Multi-API Explorer Dashboard
+# 🌐 API-Explorer-Dashboard
 
 A modern, production-ready vanilla JavaScript dashboard that integrates four different public APIs to showcase real-world data fetching, state management, and user interaction patterns. Built without frameworks to demonstrate core web development skills.
 
