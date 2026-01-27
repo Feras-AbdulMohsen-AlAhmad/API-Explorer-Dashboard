@@ -80,8 +80,12 @@ function filterSearchHistory(query) {
 export function renderWeatherPage(appEl) {
   if (!appEl) return;
 
+  // Module-level state for retry functionality
+  let lastAction = null; // { type: "query", query: string } | { type: "geo" } | { type: "ip" }
+  let lastUnits = "m";
+
   appEl.innerHTML = `
-    <section class="page">
+    <section class="page weather-page">
       <div class="page-header">
         <div>
           <h1>Weather</h1>
@@ -96,7 +100,7 @@ export function renderWeatherPage(appEl) {
                 id="weather-search"
                 class="input"
                 type="text"
-                placeholder="Enter city name or country..."
+                placeholder="e.g., Amsterdam, NL"
                 aria-label="Search for weather by city or country"
                 autocomplete="off"
                 style="width: 100%;"
@@ -126,14 +130,21 @@ export function renderWeatherPage(appEl) {
                   id="weather-units-toggle"
                   type="checkbox"
                   style="cursor: pointer;"
-                  title="Toggle between Celsius and Fahrenheit"
+                  title="Toggle between Metric and Fahrenheit"
                 />
-                <span id="weather-units-label" style="font-size: var(--font-size-sm); font-weight: 500;">Celsius</span>
+                <span id="weather-units-label" style="font-size: var(--font-size-sm); font-weight: 500;">Metric</span>
               </label>
               <button id="weather-search-btn" class="btn btn-primary">Search</button>
               <button id="weather-location-btn" class="btn btn-secondary">Use My Location</button>
             </div>
           </div>
+          ${
+            window.isSecureContext === false
+              ? `<div style="color: var(--color-muted); font-size: var(--font-size-sm); padding: var(--space-2); background: var(--color-bg-secondary); border-radius: var(--radius);">
+                  ⚠️ Geolocation may require HTTPS or localhost for security.
+                </div>`
+              : ""
+          }
         </div>
       </div>
       <div id="weather-content" class="section-block"></div>
@@ -150,26 +161,28 @@ export function renderWeatherPage(appEl) {
   let debounceTimer;
   let suggestions = [];
 
-  // Initialize units from localStorage (default: metric/Celsius)
+  // Initialize units from localStorage (default: metric)
   let currentUnits = localStorage.getItem("weather-units") || "m";
+  lastUnits = currentUnits;
   unitsToggle.checked = currentUnits === "f";
-  unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Celsius";
+  unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Metric";
 
   // Listen for units toggle changes
   unitsToggle?.addEventListener("change", (e) => {
     currentUnits = e.target.checked ? "f" : "m";
+    lastUnits = currentUnits;
     localStorage.setItem("weather-units", currentUnits);
-    unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Celsius";
+    unitsLabel.textContent = currentUnits === "f" ? "Fahrenheit" : "Metric";
     showToast(
-      `Switched to ${currentUnits === "f" ? "Fahrenheit" : "Celsius"}`,
+      `Switched to ${currentUnits === "f" ? "Fahrenheit" : "Metric"}`,
       "success",
     );
     // Refresh current weather if any is displayed
     const retryBtn = contentEl?.querySelector("#retry-btn");
-    if (!retryBtn && contentEl?.querySelector(".card")) {
-      const query = searchInput?.value?.trim();
-      if (query) {
-        searchWeather(query);
+    if (!retryBtn && contentEl?.querySelector(".weather-card")) {
+      // Re-execute last action with new units
+      if (lastAction) {
+        handleRetry();
       }
     }
   });
@@ -177,7 +190,7 @@ export function renderWeatherPage(appEl) {
   function renderWeatherCard(data) {
     if (!data || !data.current || !data.location) {
       contentEl.innerHTML = `
-        <div class="empty-state">
+        <div class="state-empty">
           <h3>No weather data available</h3>
           <p>Try searching for a different location.</p>
         </div>
@@ -188,62 +201,77 @@ export function renderWeatherPage(appEl) {
     const { current, location } = data;
     // Display units based on current selection
     const tempUnit = currentUnits === "f" ? "°F" : "°C";
-    const windUnit = currentUnits === "f" ? "mph" : "m/s";
+    const windUnit = currentUnits === "f" ? "mph" : "km/h";
+    const distanceUnit = "km";
+
+    // Helper to format values or show "—" for missing data
+    const formatValue = (value, suffix = "") => {
+      if (value === null || value === undefined || value === "") return "—";
+      return `${value}${suffix}`;
+    };
 
     contentEl.innerHTML = `
       <div style="display: grid; gap: var(--space-5);">
-        <div class="card" style="padding: var(--space-6);">
+        <div class="card weather-card" style="padding: var(--space-6);">
           <div style="text-align: center; margin-bottom: var(--space-4);">
             <h2 style="margin: 0 0 var(--space-2);">${location.name}, ${location.country}</h2>
             <div style="color: var(--color-muted); font-size: var(--font-size-sm);">
-              ${location.region ? location.region + ", " : ""}${location.timezone_id}
+              ${location.region ? location.region + " • " : ""}${location.timezone_id || "—"}
             </div>
+            ${location.localtime ? `<div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-top: var(--space-1);">Local time: ${location.localtime}</div>` : ""}
           </div>
 
-          <div style="text-align: center; margin: var(--space-6) 0;">
+          ${
+            current.weather_icons?.[0]
+              ? `<div style="text-align: center; margin: var(--space-4) 0;">
+                  <img src="${current.weather_icons[0]}" alt="Weather icon" style="width: 80px; height: 80px;" />
+                </div>`
+              : ""
+          }
+
+          <div style="text-align: center; margin: var(--space-4) 0;">
             <div style="font-size: 3.5rem; font-weight: 700;">
-              ${current.temperature}${tempUnit}
+              ${formatValue(current.temperature, tempUnit)}
             </div>
             <div style="color: var(--color-muted); font-size: var(--font-size-lg); margin-top: var(--space-2);">
               ${current.weather_descriptions?.[0] || "Clear"}
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-top: var(--space-6);">
+          <div class="weather-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-top: var(--space-6);">
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
               <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Feels Like</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.feelslike}${tempUnit}</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.feelslike, tempUnit)}</div>
             </div>
 
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
               <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Humidity</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.humidity}%</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.humidity, "%")}</div>
             </div>
 
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
-              <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Wind Speed</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.wind_speed} ${windUnit}</div>
+              <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Wind</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.wind_speed, ` ${windUnit}`)} ${current.wind_dir || ""}</div>
             </div>
 
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
               <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Pressure</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.pressure} mb</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.pressure, " mb")}</div>
             </div>
 
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
               <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Visibility</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.visibility} km</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.visibility, ` ${distanceUnit}`)}</div>
+            </div>
+
+            <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
+              <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">Precipitation</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.precip, " mm")}</div>
             </div>
 
             <div style="padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius);">
               <div style="color: var(--color-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-1);">UV Index</div>
-              <div style="font-size: var(--font-size-lg); font-weight: 600;">${current.uv_index || "N/A"}</div>
-            </div>
-          </div>
-
-          <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
-            <div style="color: var(--color-muted); font-size: var(--font-size-sm);">
-              Last updated: ${new Date(current.observation_time).toLocaleTimeString()}
+              <div style="font-size: var(--font-size-lg); font-weight: 600;">${formatValue(current.uv_index)}</div>
             </div>
           </div>
         </div>
@@ -254,23 +282,39 @@ export function renderWeatherPage(appEl) {
   function renderError(message) {
     if (!contentEl) return;
     contentEl.innerHTML = `
-      <div class="error-state">
+      <div class="state-error">
         <h3>Unable to Load Weather</h3>
-        <p>${message}</p>
+        <p>${message || "An error occurred while fetching weather data."}</p>
         <div class="actions" style="justify-content: center; margin-top: var(--space-4);">
-          <button class="btn btn-primary" id="retry-btn">Try Again</button>
+          <button class="btn btn-primary" id="retry-btn">Retry</button>
         </div>
       </div>
     `;
 
     const retryBtn = contentEl.querySelector("#retry-btn");
     if (retryBtn) {
-      retryBtn.addEventListener("click", () => {
-        const query = searchInput?.value?.trim();
-        if (query) {
-          searchWeather(query);
-        }
-      });
+      retryBtn.addEventListener("click", handleRetry);
+    }
+  }
+
+  function handleRetry() {
+    if (!lastAction) {
+      showToast("No previous action to retry", "error");
+      return;
+    }
+
+    switch (lastAction.type) {
+      case "query":
+        searchWeather(lastAction.query);
+        break;
+      case "geo":
+        useGeolocation();
+        break;
+      case "ip":
+        useIPLocation();
+        break;
+      default:
+        showToast("Unknown action type", "error");
     }
   }
 
@@ -281,6 +325,11 @@ export function renderWeatherPage(appEl) {
     }
 
     if (!contentEl) return;
+
+    // Store last action for retry
+    lastAction = { type: "query", query: query.trim() };
+    lastUnits = currentUnits;
+
     showLoader(contentEl);
 
     try {
@@ -427,6 +476,11 @@ export function renderWeatherPage(appEl) {
     }
 
     if (!contentEl) return;
+
+    // Store last action for retry
+    lastAction = { type: "geo" };
+    lastUnits = currentUnits;
+
     showLoader(contentEl);
 
     navigator.geolocation.getCurrentPosition(
@@ -461,7 +515,6 @@ export function renderWeatherPage(appEl) {
           );
           useIPLocation();
         } else {
-          hideLoader();
           const errorMsg =
             {
               2: "Unable to retrieve your location. Fetching weather by IP address...",
@@ -473,11 +526,21 @@ export function renderWeatherPage(appEl) {
           useIPLocation();
         }
       },
+      {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 600000, // 10 minutes
+      },
     );
   }
 
   async function useIPLocation() {
     if (!contentEl) return;
+
+    // Store last action for retry
+    lastAction = { type: "ip" };
+    lastUnits = currentUnits;
+
     showLoader(contentEl);
 
     try {
@@ -547,9 +610,9 @@ export function renderWeatherPage(appEl) {
 
   // Show initial empty state
   contentEl.innerHTML = `
-    <div class="empty-state">
+    <div class="state-empty">
       <h3>Search for Weather</h3>
-      <p>Enter a city name or country to get current weather, or use your location.</p>
+      <p>Search for a city or use your location.</p>
     </div>
   `;
 }
