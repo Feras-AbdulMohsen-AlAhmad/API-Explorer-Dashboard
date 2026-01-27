@@ -2,7 +2,13 @@
 import * as http from "../api/httpClient.js";
 import { ENDPOINTS, buildUrl } from "../api/endpoints.js";
 
-const BASE = ENDPOINTS.OPEN_METEO;
+const BASE = ENDPOINTS.WEATHERSTACK;
+
+export async function getCurrentByQuery(query, options) {}
+
+export async function getCurrentByCoords(lat, lon, options) {}
+
+export async function getLocationSuggestions(query) {}
 
 export async function getForecast({ lat, lon }) {
   const params = new URLSearchParams();
