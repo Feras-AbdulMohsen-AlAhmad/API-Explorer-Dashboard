@@ -68,12 +68,45 @@ export async function getCurrentByCoords(lat, lon, options = {}) {
 }
 
 /**
- * Get location suggestions (for future autocomplete)
- * @param {string} query - Search query
- * @returns {Promise<Array>} Array of location suggestions
+ * Get location suggestions for autocomplete
+ * @param {string} query - Search query (minimum 2 characters)
+ * @returns {Promise<Array>} Array of location suggestions with name, region, country, coordinates, and display text
  */
 export async function getLocationSuggestions(query) {
-  // Weatherstack free tier doesn't support suggestions
-  // This is for future premium tier integration
-  return [];
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  const params = new URLSearchParams();
+  params.set("access_key", WEATHERSTACK_ACCESS_KEY);
+  params.set("query", query.trim());
+
+  const baseUrl = buildUrl(BASE, "/current");
+  const url = `${baseUrl}?${params.toString()}`;
+
+  try {
+    const response = await http.get(url);
+
+    // If there's an error or no location data, return empty array
+    if (response.data?.error || !response.data?.location) {
+      return [];
+    }
+
+    const { location } = response.data;
+
+    // Format single location result as suggestion object
+    return [
+      {
+        name: location.name,
+        region: location.region,
+        country: location.country,
+        lat: location.lat,
+        lon: location.lon,
+        display: `${location.name}${location.region ? ", " + location.region : ""}, ${location.country}`,
+      },
+    ];
+  } catch (error) {
+    // Silently fail and return empty array for autocomplete
+    return [];
+  }
 }
