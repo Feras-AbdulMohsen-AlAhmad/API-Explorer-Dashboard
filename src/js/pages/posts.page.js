@@ -65,6 +65,14 @@ export function renderPostsPage(appEl) {
   let modalPost = null;
   let modalComments = [];
 
+  function normalizePostsError(error) {
+    if (error?.title && error?.message) return error;
+    return {
+      title: "Posts error",
+      message: error instanceof Error ? error.message : "Failed to load posts",
+    };
+  }
+
   const filteredPosts = () => {
     if (!currentTerm) return allPosts;
     const term = currentTerm.toLowerCase();
@@ -80,17 +88,16 @@ export function renderPostsPage(appEl) {
       renderPosts(filteredPosts());
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load posts";
-      showToast(message, "error");
-      renderError(message);
+      const normalized = normalizePostsError(error);
+      showToast(normalized.message, "error");
+      renderError(normalized);
     }
   }
 
   function renderPosts(posts) {
     if (!posts.length) {
       contentEl.innerHTML = `
-        <div class="empty-state">
+        <div class="state-empty">
           <h3>${currentTerm ? "No matches found" : "No posts available"}</h3>
           <p>${currentTerm ? "Try a different search." : "Try again later."}</p>
         </div>
@@ -122,11 +129,11 @@ export function renderPostsPage(appEl) {
     attachCardHandlers();
   }
 
-  function renderError(message) {
+  function renderError(error) {
     contentEl.innerHTML = `
-      <div class="error-state">
-        <h3>Unable to load posts</h3>
-        <p>${escapeHtml(message)}</p>
+      <div class="state-error">
+        <h3>${escapeHtml(error.title || "Unable to load posts")}</h3>
+        <p>${escapeHtml(error.message || "An unexpected error occurred.")}</p>
         <div class="actions" style="justify-content: center; margin-top: var(--space-4);">
           <button class="btn btn-primary" id="retry-posts">Retry</button>
         </div>
@@ -182,13 +189,12 @@ export function renderPostsPage(appEl) {
       renderModalContent(modalBody, post, comments || []);
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load post";
-      showToast(message, "error");
+      const normalized = normalizePostsError(error);
+      showToast(normalized.message, "error");
       modalBody.innerHTML = `
-        <div class="error-state">
-          <h3>Unable to load post</h3>
-          <p>${escapeHtml(message)}</p>
+        <div class="state-error">
+          <h3>${escapeHtml(normalized.title || "Unable to load post")}</h3>
+          <p>${escapeHtml(normalized.message)}</p>
         </div>
       `;
     }
@@ -213,7 +219,7 @@ export function renderPostsPage(appEl) {
           )
           .join("")
       : `
-          <div class="empty-state">
+          <div class="state-empty">
             <h3>No comments</h3>
             <p>Be the first to comment.</p>
           </div>
@@ -318,9 +324,8 @@ export function renderPostsPage(appEl) {
       createForm.reset();
       renderPosts(filteredPosts());
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to create post";
-      showToast(message, "error");
+      const normalized = normalizePostsError(error);
+      showToast(normalized.message, "error");
     } finally {
       hideLoader(createForm);
     }
@@ -355,9 +360,8 @@ export function renderPostsPage(appEl) {
       showToast("Post updated", "success");
       renderModalContent(container, merged, modalComments || []);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update post";
-      showToast(message, "error");
+      const normalized = normalizePostsError(error);
+      showToast(normalized.message, "error");
     } finally {
       hideLoader(form);
     }
@@ -374,9 +378,8 @@ export function renderPostsPage(appEl) {
       showToast("Post deleted", "success");
       closeModal();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to delete post";
-      showToast(message, "error");
+      const normalized = normalizePostsError(error);
+      showToast(normalized.message, "error");
     } finally {
       hideLoader(container);
     }

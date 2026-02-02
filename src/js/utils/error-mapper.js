@@ -104,3 +104,57 @@ export function mapWeatherError(error) {
 
   return { ...fallback, code };
 }
+
+/**
+ * Map JSONPlaceholder Posts API errors
+ * @param {any} error - Error object or string
+ * @returns {{ title: string, message: string, code?: string }}
+ */
+export function mapPostsError(error) {
+  const fallback = {
+    title: "Posts service error",
+    message: "Failed to load posts. Please try again.",
+  };
+
+  if (!error) return fallback;
+
+  if (error.title && error.message) {
+    return error;
+  }
+
+  const message =
+    typeof error === "string"
+      ? error
+      : error?.message
+        ? String(error.message)
+        : "";
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("network") ||
+    lowerMessage.includes("request failed")
+  ) {
+    return {
+      title: "Network error",
+      message:
+        "Unable to connect to posts service. Please check your internet connection.",
+    };
+  }
+
+  if (lowerMessage.includes("404") || lowerMessage.includes("not found")) {
+    return {
+      title: "Not found",
+      message: "The requested post or resource could not be found.",
+    };
+  }
+
+  if (lowerMessage.includes("invalid") || lowerMessage.includes("validation")) {
+    return {
+      title: "Invalid input",
+      message: "Please check the provided information and try again.",
+    };
+  }
+
+  return fallback;
+}
