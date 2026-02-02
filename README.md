@@ -1,379 +1,362 @@
-# Weather API Explorer
+# API Explorer Dashboard
 
-A production-grade weather application built with vanilla JavaScript, demonstrating real-world constraints and professional engineering patterns. Built without frameworks to showcase core web development fundamentals and optimization techniques.
+A frontend training project demonstrating professional API integration patterns, clean architecture, and separation of concerns. This project integrates multiple public APIs using a unified three-layer architecture pattern designed for scalability and maintainability.
 
----
+## Project Overview
 
-## Overview
+This project serves as a practical exploration of modern frontend architecture patterns when working with external APIs. It addresses common challenges in API-driven applications:
 
-This weather application provides an interactive interface for exploring current weather conditions using the **Weatherstack API (FREE tier)**. The project demonstrates how to build scalable applications under **strict resource constraints** (100 API calls/month), emphasizing intelligent caching, request deduplication, and user-triggered data fetching. All code is written in vanilla JavaScript ES6+ with zero dependencies.
+- **Raw API responses leaking into UI components**, making them brittle and difficult to maintain
+- **Inconsistent error handling** across different API integrations
+- **Business logic scattered** between UI and HTTP layers
+- **Difficulty in testing** due to tight coupling between layers
 
-**Key Insight:** This project prioritizes **engineering discipline** over feature quantity—every optimization technique solves a real problem within the FREE tier constraint.
-
----
+The solution is a three-layer architecture that enforces strict separation of concerns: API Layer (HTTP only), Service Layer (normalization, caching, error mapping), and UI Layer (presentation only). This pattern, established with the WeatherAPI.com integration, is consistently applied across all APIs in the project.
 
 ## Features
 
-### User-Facing Features
+### Weather (WeatherAPI.com)
 
-- **City Search** - Search weather by city name with instant suggestions
-- **Geolocation** - Auto-detect location via browser geolocation (with IP fallback)
-- **Units Toggle** - Switch between Celsius and Fahrenheit with state persistence
-- **Recent Searches** - localStorage-based suggestion dropdown (no API calls)
-- **Keyboard Navigation** - Full accessibility: ArrowUp/Down, Enter, Escape
-- **Weather Display** - Current conditions card with graceful missing field handling
-- **Retry Logic** - Smart retry button remembers last successful action
-- **State Restoration** - Automatically restores last weather view on page reload (24-hour validity)
-- **Error Handling** - User-friendly error messages with specific guidance
+- Current weather by city, country, or coordinates
+- Auto-detection via IP geolocation
+- 7-day weather forecast with detailed metrics
+- Historical weather data queries
+- Location search with autocomplete suggestions
+- Persistent weather state and recent searches
+- Temperature unit conversion (Celsius/Fahrenheit)
 
-### Technical Features
+### Posts (JSONPlaceholder)
 
-- **localStorage Caching** - 10-minute TTL with normalized query keys
-- **Request Deduplication** - Concurrent duplicate requests share single Promise
-- **Global Loading State** - Central manager for all UI loading indicators
-- **Error Normalization** - Centralized error mapping (technical → user-friendly)
-- **State Persistence** - Automatic save/restore with expiry validation
-- **Dev Debug Panel** - Localhost-only UI showing network, cache, dedup stats
-- **Secure Config** - API key stored in gitignored `config.local.js`
+- Full CRUD operations (Create, Read, Update, Delete)
+- Search and filter posts by title
+- View post comments
+- In-line editing and deletion
+- Form validation and error handling
 
----
+### Countries (REST Countries API)
 
-## Architecture
+- Browse all countries worldwide
+- Search by country name
+- Search by ISO country code (2 or 3 letters)
+- Filter by geographic region
+- Sort by name, population, or area
+- Detailed country information with flags
 
-### Project Structure
+### Characters (Rick and Morty API)
+
+- Paginated character browsing
+- Filter by name, status, species, and gender
+- Character detail modal with full information
+- Pagination controls with API-driven state
+
+## Tech Stack
+
+- **JavaScript (ES6+)** - Vanilla JavaScript with modern syntax
+- **CSS3** - Custom properties, Grid, Flexbox
+- **Architecture** - Three-layer pattern (API, Service, UI)
+- **HTTP Client** - Custom wrapper around Fetch API
+- **State Management** - LocalStorage for persistence, module-level state
+- **Postman** - API testing and documentation
+
+## Architecture Overview
+
+This project implements a three-layer architecture that strictly separates concerns:
+
+```
+┌─────────────────────────────────────────┐
+│            UI Layer (Pages)             │
+│  - Rendering                            │
+│  - User interactions                    │
+│  - Display normalized data/errors       │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│         Service Layer (Services)        │
+│  - Data normalization                   │
+│  - Business logic (sorting, filtering)  │
+│  - Error mapping (via error-mapper)     │
+│  - Caching and deduplication            │
+│  - Pagination state management          │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│          API Layer (API files)          │
+│  - Pure HTTP requests                   │
+│  - URL construction                     │
+│  - Query parameter handling             │
+│  - No business logic                    │
+└─────────────────────────────────────────┘
+```
+
+### Why This Separation Matters
+
+**API Layer** handles only HTTP mechanics. Functions here are pure: given parameters, they make HTTP requests and return raw responses. No normalization, no error handling beyond what the HTTP client provides.
+
+**Service Layer** is where intelligence lives. Raw API responses are normalized into consistent shapes. Errors are mapped to user-friendly messages. Caching, sorting, filtering, and pagination logic reside here. This layer presents a clean interface to the UI.
+
+**UI Layer** handles only presentation. Pages receive normalized data and normalized error objects. They never see raw API responses or HTTP errors. This makes UI components simple, testable, and resilient to API changes.
+
+## Folder Structure
 
 ```
 src/
-├── index.html
+├── api/                    # API Layer - HTTP operations only
+│   ├── httpClient.js       # Fetch wrapper with common headers
+│   ├── endpoints.js        # API base URLs and configuration
+│   ├── weather.api.js      # WeatherAPI.com HTTP functions
+│   ├── posts.api.js        # JSONPlaceholder HTTP functions
+│   ├── countries.api.js    # REST Countries HTTP functions
+│   └── rickmorty.api.js    # Rick & Morty API HTTP functions
 │
-├── js/
-│   ├── app.js                    # SPA bootstrap with validation
-│   ├── config.js                 # Config loading with fallback chain
-│   ├── router.js                 # Client-side routing (existing)
-│   │
-│   ├── services/
-│   │   └── weather.service.js    # Weatherstack API client (⭐ main logic)
-│   │
-│   ├── pages/
-│   │   └── weather.page.js       # Weather UI & state management
-│   │
-│   ├── state/
-│   │   ├── loading.state.js      # Global loading indicator
-│   │   ├── weather.persistence.js # State save/restore with TTL
-│   │   └── weather.debug.js      # Stats tracking (dev-only)
-│   │
-│   ├── utils/
-│   │   ├── error-mapper.js       # Technical → user-friendly errors
-│   │   ├── request-deduplicator.js # Prevent concurrent duplicates
-│   │   └── [existing utilities]
-│   │
-│   └── components/
-│       ├── weather-debug.panel.js # Dev debug UI (localhost only)
-│       └── [existing components]
+├── services/               # Service Layer - Business logic
+│   ├── weather.service.js  # Weather normalization, caching, error mapping
+│   ├── posts.service.js    # Posts normalization and error mapping
+│   ├── countries.service.js # Countries normalization, sorting
+│   └── rickmorty.service.js # Characters normalization, pagination
 │
-└── styles/
-    └── [existing styles]
+├── pages/                  # UI Layer - Presentation only
+│   ├── weather.page.js     # Weather UI and interactions
+│   ├── posts.page.js       # Posts CRUD UI
+│   ├── countries.page.js   # Countries explorer UI
+│   └── characters.page.js  # Characters browser UI
+│
+├── components/             # Reusable UI components
+│   ├── navbar.js           # Navigation
+│   ├── loader.js           # Loading spinner
+│   ├── toast.js            # Notifications
+│   ├── modal.js            # Modal dialogs
+│   ├── pagination.js       # Pagination controls
+│   └── card.js             # Card component
+│
+├── utils/                  # Shared utilities
+│   ├── error-mapper.js     # Centralized error normalization
+│   ├── dom.js              # DOM helpers
+│   ├── formatters.js       # Data formatting utilities
+│   ├── storage.js          # LocalStorage abstraction
+│   └── validators.js       # Input validation
+│
+├── config.js               # Application configuration
+├── router.js               # Client-side routing
+├── app.js                  # Application entry point
+└── index.html              # HTML shell
+
+postman/                    # API testing
+├── API-Explorer.postman_collection.json
+└── API-Explorer.postman_environment.json
 ```
 
-### Module Responsibilities
+## Error Handling Strategy
 
-| Module                    | Purpose                 | Exports                                                                       |
-| ------------------------- | ----------------------- | ----------------------------------------------------------------------------- |
-| `weather.service.js`      | Weatherstack API client | `getCurrentByQuery()`, `getCurrentByCoords()`, `getCurrentByAutoIP()`         |
-| `weather.page.js`         | UI & event handlers     | Renders DOM, manages state, calls service                                     |
-| `loading.state.js`        | Global loading tracker  | `startLoading()`, `stopLoading()`, `isLoading()`                              |
-| `weather.persistence.js`  | State save/restore      | `saveLastWeatherState()`, `getLastWeatherState()`                             |
-| `error-mapper.js`         | Error normalization     | `mapWeatherError()` converts errors to user-friendly format                   |
-| `request-deduplicator.js` | Dedup Promise tracking  | `deduplicateRequest()`, `isRequestInFlight()`                                 |
-| `weather.debug.js`        | Stats tracking          | `incrementNetworkRequest()`, `incrementCacheHit()`, `incrementDeduplicated()` |
-| `weather-debug.panel.js`  | Dev debug UI            | `renderWeatherDebugPanel()` (localhost only)                                  |
+All errors in this project flow through a centralized error mapper (`utils/error-mapper.js`). Each API has its own mapping function that converts raw errors into normalized error objects.
 
----
-
-## Weather API Strategy
-
-### Why Weatherstack (FREE Tier)?
-
-- **No Authentication** - Single API key in `config.local.js`
-- **Simple Current Endpoint** - `https://api.weatherstack.com/current`
-- **Query Flexibility** - Supports city names, lat/lon, IP detection (`fetch:ip`)
-- **Clear Error Format** - `{ success: false, error: { code, type, info } }`
-
-### The 100 Calls/Month Challenge
-
-**Problem:** 100 calls/month = ~3 calls/day. Typical usage with search would exhaust this instantly.
-
-**Solution - Four Optimization Layers:**
-
-1. **localStorage Caching (10-minute TTL)**
-   - Most searches repeat within 10 minutes
-   - Cache key: `weatherstack:current:units:normalizedQuery`
-   - Example: searching "London" twice within 10 min → only 1 API call
-   - Implementation: Check cache before API call, write on success
-
-2. **Request Deduplication**
-   - Rapid clicks on search button trigger multiple identical API calls
-   - Solution: Share single Promise across concurrent requests
-   - Map-based tracking: `dedupKey → Promise`
-   - Auto-cleanup on resolve/reject
-
-3. **User-Triggered Fetching Only**
-   - No auto-refresh (unlike typical weather apps)
-   - No background sync
-   - Single button click = intentional API call
-   - Reduces thoughtless requests
-
-4. **Local Search Suggestions**
-   - Recent searches stored in localStorage
-   - 10 popular cities hardcoded (no API call)
-   - Keyboard navigation without fetching
-   - Users satisfy exploration urges without API consumption
-
-**Result:** Realistic usage (search, toggle units, retry) uses ~0.5-1 call per session.
-
-### Weatherstack Error Handling
-
-```javascript
-// Service detects success: false, maps to user-friendly error
-const response = await fetch(...);
-const data = await response.json();
-
-if (!data.success) {
-  // Weatherstack-specific error detection
-  const error = mapWeatherError(data.error);
-  // Returns: { title: "Invalid City", message: "We couldn't find...", code: "location_not_found" }
-  throw error;
-}
-```
-
-### Response Normalization
-
-All weather responses normalized to consistent structure:
+### Normalized Error Object
 
 ```javascript
 {
-  location: { name, region, country, lat, lon },
-  current: { temp, condition, humidity, windSpeed, ... },
-  raw: { ...full_weatherstack_response }
+  title: "Network Error",           // User-facing error title
+  message: "Unable to connect...",  // Detailed user message
+  code: "NETWORK_ERR"               // Optional error code
 }
 ```
 
----
+### API-Specific Mappers
 
-## Error Handling Philosophy
+- `mapWeatherError()` - Handles WeatherAPI.com errors (API key issues, location not found, rate limits)
+- `mapPostsError()` - Handles JSONPlaceholder errors (404, network, validation)
+- `mapCountriesError()` - Handles REST Countries errors (country not found, network)
+- `mapRickMortyError()` - Handles Rick & Morty API errors (character not found, rate limits)
 
-**Goal:** Never show users raw API error codes. Convert to actionable guidance.
+### Benefits
 
-### Error Mapping Strategy
+1. **Consistent UX** - All errors look the same to users regardless of which API failed
+2. **Maintainable** - Error handling logic is centralized, not scattered across pages
+3. **Testable** - Error mappers are pure functions that can be unit tested
+4. **Resilient** - API changes to error formats don't break the UI
 
-| Technical Error                 | User Title            | User Message                       | Guidance                                 |
-| ------------------------------- | --------------------- | ---------------------------------- | ---------------------------------------- |
-| `invalid_access_key`            | Authentication Failed | Your API key is invalid or missing | Check `config.local.js`                  |
-| `invalid_query`                 | Invalid City          | City name not recognized           | Try "New York", "London", "Tokyo"        |
-| `no_result` (after valid)       | Location Not Found    | No weather data available          | City might be too small; try larger city |
-| `resource_not_found` (104, 105) | API Limit Reached     | Used all monthly requests          | Try again next month or use geolocation  |
-| Network timeout                 | Connection Error      | Request took too long              | Check internet connection; try again     |
-
-### Implementation
-
-1. **Centralized Mapper** (`error-mapper.js`)
-   - Detects Weatherstack error types: `code`, `type`, `info`
-   - Returns: `{ title, message, code? }`
-   - No UI strings in service layer
-
-2. **Integration Points**
-   - weather.service.js catches and maps before throwing
-   - weather.page.js receives formatted error and displays to user
-   - Toast notifications use friendly titles/messages
-
----
-
-## Performance & UX Decisions
-
-### Why No Auto-Refresh?
-
-Traditional weather apps refresh every 5-10 minutes. **Not here.**
-
-- Wastes API quota (6-12 calls/session auto-refresh alone)
-- User didn't ask for refresh; why consume resources?
-- Geolocation changes are rare per session
-- Decision: **User controls all API fetches** (search button, retry, geolocation)
-
-### Global Loading State
-
-Single source of truth prevents race conditions:
+Example from service layer:
 
 ```javascript
-startLoading("search"); // Multiple operations can call this
-startLoading("geolocation");
-// UI shows loading if ANY key is active
-
-stopLoading("search");
-stopLoading("geolocation"); // UI stops loading when all complete
+export async function getAllCountries() {
+  try {
+    const data = await countriesApi.fetchAllCountries();
+    return normalizeCountriesData(data);
+  } catch (error) {
+    throw mapCountriesError(error); // Always normalized
+  }
+}
 ```
 
-**Benefits:**
+Example from UI layer:
 
-- Button disabling works correctly (no accidental double-requests)
-- Prevents showing success while other requests still pending
-- Centralized: easy to hook logging/analytics
+```javascript
+try {
+  const countries = await getAllCountries();
+  renderCountries(countries);
+} catch (error) {
+  // error is guaranteed to have { title, message }
+  showToast(error.message, "error");
+}
+```
 
-### State Persistence (24-Hour Expiry)
+## API Integrations
 
-**Problem:** Users expect weather to reappear on page reload.
+### WeatherAPI.com (Reference Implementation)
 
-**Solution:**
+The WeatherAPI.com integration establishes the reference pattern followed by all other APIs:
 
-- Save last successful weather fetch + units + timestamp
-- Restore on page load if < 24 hours old
-- Falls back to empty state gracefully
-- Persisted data = offline-friendly bonus
+- **API Layer**: `weather.api.js` with 5 functions (`fetchCurrentWeather`, `fetchForecast`, etc.)
+- **Service Layer**: `weather.service.js` with normalization (`normalizeWeatherData`), caching (10-min TTL), request deduplication, and error mapping
+- **Error Handling**: `mapWeatherError` handles API key issues, location errors, rate limits
+- **Advanced Features**: IP-based auto-detection, unit conversion, persistent state
 
-### Dev-Only Debug Panel
+### JSONPlaceholder (Posts API)
 
-**Visibility:** Shows only on `localhost` OR `window.__DEV__ === true`
+Follows the WeatherAPI pattern:
 
-**Displays:**
+- **API Layer**: `posts.api.js` with 8 functions (all CRUD operations)
+- **Service Layer**: `posts.service.js` with data normalization and error mapping
+- **Error Handling**: `mapPostsError` for 404, network, and validation errors
 
-- Network Requests - Total API calls made
-- Cache Hits - Requests served from localStorage
-- Deduped Requests - Duplicate requests prevented
-- Last Fetch Time - Timestamp of last API call
-- Reset Stats - Button to clear tracking
+### REST Countries API
 
-**Purpose:** Monitor quota consumption during development without IDE tools
+Follows the WeatherAPI pattern:
 
----
+- **API Layer**: `countries.api.js` with 5 functions (search by name, code, region)
+- **Service Layer**: `countries.service.js` with normalization, alphabetical sorting
+- **Error Handling**: `mapCountriesError` for country not found and network errors
+- **Business Logic**: Sorting moved from UI to service layer
 
-## Development & Setup
+### Rick and Morty API (Characters)
+
+Follows the WeatherAPI pattern:
+
+- **API Layer**: `rickmorty.api.js` with 3 functions (paginated characters, single character, bulk fetch)
+- **Service Layer**: `rickmorty.service.js` with normalization and pagination response handling
+- **Error Handling**: `mapRickMortyError` for character not found, rate limits
+- **Business Logic**: Pagination state managed in service layer
+
+## Postman Collection
+
+The project includes a comprehensive Postman collection for testing and documentation purposes.
+
+### Importing the Collection
+
+1. Open Postman
+2. Click **Import** button
+3. Select `postman/API-Explorer.postman_collection.json`
+4. Import the environment: `postman/API-Explorer.postman_environment.json`
+5. Select "API-Explorer" environment from the dropdown
+
+### Environment Variables
+
+The following variables are used across requests:
+
+- `WEATHERAPI_URL` - Base URL for WeatherAPI.com
+- `WEATHERAPI_KEY` - Your WeatherAPI.com API key
+- `WEATHERAPI_AQI` - Air quality data flag (yes/no)
+- `WEATHERAPI_DAYS` - Forecast days (1-10)
+- `CITY_NAME` - Sample city for testing
+- `LATITUDE`, `LONGITUDE` - Coordinates for testing
+- `HISTORICAL_DATE` - Date for historical queries
+
+### Why Postman is Included
+
+Postman provides:
+
+- **API Documentation** - Each request includes descriptions, parameter docs, and example responses
+- **Quick Testing** - Test API endpoints without running the app
+- **Debugging** - Isolate API issues from frontend code
+- **Rate Limit Testing** - Experiment with endpoints before integrating
+- **Team Collaboration** - Share API knowledge with team members
+
+## Getting Started
 
 ### Prerequisites
 
-- Modern browser (Chrome, Firefox, Safari, Edge)
-- VS Code with [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- WeatherAPI.com API key (free tier available)
+- Local web server (Live Server, http-server, or similar)
 
-### Step 1: Get Weatherstack API Key
+### Installation
 
-1. Visit [https://weatherstack.com/](https://weatherstack.com/)
-2. Sign up for FREE tier (100 calls/month)
-3. Copy your Access Key from dashboard
+1. Clone the repository:
 
-### Step 2: Configure Local API Key
+   ```bash
+   git clone https://github.com/Feras-AbdulMohsen-AlAhmad/API-Explorer-Dashboard.git
+   cd API-Explorer-Dashboard
+   ```
 
-1. Create `src/js/config.local.js`:
+2. Configure API keys:
+   - Open `src/config.js`
+   - Add your WeatherAPI.com API key:
+     ```javascript
+     WEATHER_API_KEY: "your_api_key_here";
+     ```
 
-```javascript
-export const CONFIG = {
-  WEATHERSTACK_ACCESS_KEY: "your_actual_key_here",
-};
-```
+3. Serve the project:
 
-2. **Important:** `config.local.js` is gitignored—never commit your key
+   ```bash
+   # Using Live Server (VS Code extension)
+   # Right-click on index.html → Open with Live Server
 
-3. Fallback: If `config.local.js` missing, app loads `config.example.js` (placeholder key)
+   # Or using http-server (Node.js)
+   npx http-server src -p 8080
+   ```
 
-### Step 3: Run Locally
+4. Open browser:
+   ```
+   http://localhost:8080
+   ```
 
-1. Open project in VS Code
-2. Right-click `src/index.html` → "Open with Live Server"
-3. Navigate to Weather page
-4. On `localhost`, debug panel visible in bottom-right
+### Configuration Notes
 
-### Debugging Tips
+- JSONPlaceholder, REST Countries, and Rick & Morty APIs require no authentication
+- WeatherAPI.com requires a free API key from [weatherapi.com](https://www.weatherapi.com/)
+- API keys are configured in `src/config.js`
 
-**View Cache Status:**
+## Design Principles
 
-- Open DevTools → Application → LocalStorage
-- Search keys: `weatherstack:current:*`
-- Each has format: `weatherstack:current:metric:london`
+### Separation of Concerns
 
-**Monitor API Usage:**
+Each layer has a single responsibility. API layers know nothing about normalization. Services know nothing about rendering. Pages know nothing about HTTP.
 
-- Debug panel shows: Network, Cache Hits, Dedup count
-- Check Weatherstack dashboard for monthly quota
+### Scalability
 
-**Force Cache Bypass:**
+Adding a new API requires:
 
-- Clear localStorage: `localStorage.clear()`
-- Or specific key: `localStorage.removeItem("weatherstack:current:metric:london")`
+1. Create `api/newapi.api.js` with HTTP functions
+2. Create `services/newapi.service.js` with normalization and error mapping
+3. Add `mapNewApiError` to `error-mapper.js`
+4. Create `pages/newapi.page.js` for UI
 
-**Enable Debug Panel on Production (Never!):**
+The pattern is repeatable and predictable.
 
-```javascript
-// In DevTools console (dev only)
-window.__DEV__ = true; // Reload page
-```
+### Maintainability
 
----
+- Changes to API response formats only affect service normalization functions
+- Changes to error handling only affect error mapper functions
+- Changes to UI only affect page components
+- Layers are loosely coupled and independently testable
 
-## Learning Outcomes
+### Consistency
 
-This project teaches:
-
-1. **Real-World API Constraints** - How to optimize under quotas (100 calls/month)
-2. **Caching Strategies** - localStorage TTL pattern, normalized keys
-3. **Request Deduplication** - Promise sharing for concurrent requests
-4. **State Management Without Frameworks** - Multiple state modules, centralized loading
-5. **Error Mapping** - Technical → user-friendly conversion layer
-6. **Configuration Patterns** - Secure API keys, gitignored local config
-7. **Graceful Degradation** - Geolocation fallback to IP detection
-8. **localStorage API** - TTL patterns, JSON serialization, expiry validation
-9. **Async/Await Patterns** - Promise handling, error propagation
-10. **Module Architecture** - Clear separation: services, pages, state, utils
-
-### Code Quality Principles Demonstrated
-
-- ✅ Single Responsibility Principle (weather.service.js only handles API)
-- ✅ DRY (Shared helpers: normalizeQuery, buildCacheKey, mapError)
-- ✅ Separation of Concerns (state logic separate from UI)
-- ✅ Error Boundaries (try-catch at appropriate layers)
-- ✅ Immutable Data Patterns (spread operator, Object.freeze where needed)
-- ✅ Readable Code (meaningful variable names, JSDoc comments)
-
----
+All four APIs follow the same pattern. A developer familiar with one API integration can immediately understand another. Error objects have the same shape. Service functions have similar naming conventions. The codebase is predictable.
 
 ## Future Improvements
 
-- **7-Day Forecast** - Add forecast endpoint (separate API call cost)
-- **City Autocomplete API** - Geonames or OpenCage for better search
-- **Multiple Units Display** - Show both C° and F° simultaneously
-- **Favorite Cities** - Pin frequently searched cities
-- **Historical Data** - View past week's weather trend
-- **Dark Mode** - Persistent theme preference
-- **PWA Support** - Install as app, offline functionality
-- **TypeScript** - Type safety for larger codebase
-- **Unit Tests** - Jest for service layer testing
-- **Analytics** - Track most searched cities (privacy-respecting)
+- **Authentication** - Add user authentication with JWT tokens
+- **Advanced Caching** - Implement cache invalidation strategies and cache size limits
+- **Unit Tests** - Add Jest or Vitest for testing services and error mappers
+- **TypeScript Migration** - Add type safety across all layers
+- **State Management Library** - Consider Redux or Zustand for complex state
+- **Build Pipeline** - Add Vite or Webpack for bundling and optimization
+- **API Rate Limiting UI** - Display rate limit status to users
+- **Offline Support** - Service Worker for offline functionality
+- **Accessibility Audit** - WCAG 2.1 AA compliance testing
+- **Performance Monitoring** - Add performance metrics and logging
 
 ---
 
-## Technologies & Standards
-
-- **JavaScript:** ES6+ modules, async/await, URLSearchParams
-- **Storage:** localStorage with TTL pattern
-- **Patterns:** Service Layer, State Management, Error Mapping, Request Deduplication
-- **Standards:** Semantic HTML5, ARIA accessibility, Fetch API
-
----
-
-## License
-
-MIT License - see LICENSE file for details
-
----
-
-## Author
-
-**Feras Abdul Mohsen Al-Ahmad**
-
-- GitHub: [@Feras-AbdulMohsen-AlAhmad](https://github.com/Feras-AbdulMohsen-AlAhmad)
-- Portfolio: [Coming Soon]
-
----
-
-## Acknowledgments
-
-- [Weatherstack](https://weatherstack.com/) - Real-time weather API
-- [ES6 Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) - Modern JavaScript modules
-- [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) - Modern HTTP requests
-- [localStorage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) - Client-side persistence
+**License**: MIT  
+**Author**: Feras AbdulMohsen AlAhmad  
+**Repository**: [API-Explorer-Dashboard](https://github.com/Feras-AbdulMohsen-AlAhmad/API-Explorer-Dashboard)
