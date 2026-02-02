@@ -1,6 +1,54 @@
 // Countries Service - REST Countries API integration
 import * as countriesApi from "../api/countries.api.js";
 import { mapCountriesError } from "../utils/error-mapper.js";
+import { deduplicateRequest } from "../utils/request-deduplicator.js";
+
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_PREFIX = "countries:";
+
+function buildCacheKey(type, value) {
+  const normalized = String(value ?? "all")
+    .trim()
+    .toLowerCase();
+  return `${CACHE_PREFIX}${type}:${normalized}`;
+}
+
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    const timestamp = parsed.timestamp || 0;
+    if (Date.now() - timestamp > CACHE_TTL_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return parsed.data || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
+  } catch (error) {
+    // Ignore cache write failures (storage unavailable or quota exceeded)
+  }
+}
+
+async function fetchWithCache(cacheKey, fetchFn) {
+  const cached = readCache(cacheKey);
+  if (cached) return cached;
+
+  return deduplicateRequest(cacheKey, async () => {
+    const data = await fetchFn();
+    const normalized = normalizeCountries(data) || [];
+    writeCache(cacheKey, normalized);
+    return normalized;
+  });
+}
 
 function normalizeCountry(country) {
   if (!country || typeof country !== "object") return country;
@@ -56,8 +104,10 @@ export function sortCountries(countries, sortKey = "name-asc") {
 
 export async function getAllCountries(options = {}) {
   try {
-    const data = await countriesApi.fetchAllCountries();
-    const normalized = normalizeCountries(data) || [];
+    const cacheKey = buildCacheKey("all", "all");
+    const normalized = await fetchWithCache(cacheKey, () =>
+      countriesApi.fetchAllCountries(),
+    );
     return sortCountries(normalized, options.sort);
   } catch (error) {
     throw mapCountriesError(error);
@@ -66,8 +116,10 @@ export async function getAllCountries(options = {}) {
 
 export async function getCountryByName(countryName, options = {}) {
   try {
-    const data = await countriesApi.fetchCountryByName(countryName);
-    const normalized = normalizeCountries(data) || [];
+    const cacheKey = buildCacheKey("name", countryName);
+    const normalized = await fetchWithCache(cacheKey, () =>
+      countriesApi.fetchCountryByName(countryName),
+    );
     return sortCountries(normalized, options.sort);
   } catch (error) {
     throw mapCountriesError(error);
@@ -76,8 +128,10 @@ export async function getCountryByName(countryName, options = {}) {
 
 export async function getCountryByCode(countryCode, options = {}) {
   try {
-    const data = await countriesApi.fetchCountryByCode(countryCode);
-    const normalized = normalizeCountries(data) || [];
+    const cacheKey = buildCacheKey("code", countryCode);
+    const normalized = await fetchWithCache(cacheKey, () =>
+      countriesApi.fetchCountryByCode(countryCode),
+    );
     return sortCountries(normalized, options.sort);
   } catch (error) {
     throw mapCountriesError(error);
@@ -86,8 +140,10 @@ export async function getCountryByCode(countryCode, options = {}) {
 
 export async function getCountriesByRegion(region, options = {}) {
   try {
-    const data = await countriesApi.fetchCountriesByRegion(region);
-    const normalized = normalizeCountries(data) || [];
+    const cacheKey = buildCacheKey("region", region);
+    const normalized = await fetchWithCache(cacheKey, () =>
+      countriesApi.fetchCountriesByRegion(region),
+    );
     return sortCountries(normalized, options.sort);
   } catch (error) {
     throw mapCountriesError(error);

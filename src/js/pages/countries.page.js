@@ -131,8 +131,10 @@ export function renderCountriesPage(appEl) {
   // Region filter elements
   const regionSelect = appEl.querySelector("#region-select");
 
+  const PAGE_SIZE = 24;
   let allCountries = [];
   let displayedCountries = [];
+  let visibleCount = PAGE_SIZE;
   let currentMode = FILTER_MODE.ALL;
   let currentSort = "name-asc";
   let debounceTimer = null;
@@ -149,6 +151,10 @@ export function renderCountriesPage(appEl) {
 
   function setLastAction(type, payload = {}) {
     lastAction = { type, ...payload };
+  }
+
+  function resetVisibleCount() {
+    visibleCount = PAGE_SIZE;
   }
 
   // Handle tab switching
@@ -191,6 +197,7 @@ export function renderCountriesPage(appEl) {
       allCountries = (await getAllCountries({ sort: currentSort })) || [];
       displayedCountries = [...allCountries];
       hideLoader();
+      resetVisibleCount();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Loaded ${allCountries.length} countries`, "success");
     } catch (error) {
@@ -214,6 +221,7 @@ export function renderCountriesPage(appEl) {
       const countries = await getCountryByName(query, { sort: currentSort });
       displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
+      resetVisibleCount();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Found ${displayedCountries.length} result(s)`, "success");
     } catch (error) {
@@ -237,6 +245,7 @@ export function renderCountriesPage(appEl) {
       const countries = await getCountryByCode(code, { sort: currentSort });
       displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
+      resetVisibleCount();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Found country with code "${code}"`, "success");
     } catch (error) {
@@ -252,6 +261,7 @@ export function renderCountriesPage(appEl) {
     if (!region || region === "all") {
       setLastAction("all");
       displayedCountries = [...allCountries];
+      resetVisibleCount();
       renderCountries(sortedCountries(displayedCountries));
       return;
     }
@@ -264,6 +274,7 @@ export function renderCountriesPage(appEl) {
       });
       displayedCountries = countries || [];
       hideLoader();
+      resetVisibleCount();
       renderCountries(sortedCountries(displayedCountries));
       showToast(
         `Found ${displayedCountries.length} countries in ${region}`,
@@ -288,7 +299,10 @@ export function renderCountriesPage(appEl) {
       return;
     }
 
-    const cardsHtml = countries
+    const visibleCountries = countries.slice(0, visibleCount);
+    const canLoadMore = visibleCount < countries.length;
+
+    const cardsHtml = visibleCountries
       .map(
         (country, index) => `
         <div class="card country-card" data-index="${index}" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
@@ -328,6 +342,13 @@ export function renderCountriesPage(appEl) {
     contentEl.innerHTML = `
       <div style="display: grid; gap: var(--space-4);">
         ${cardsHtml}
+        ${
+          canLoadMore
+            ? `<div class="actions" style="justify-content: center; margin-top: var(--space-3);">
+                <button class="btn btn-secondary" id="load-more-countries">Load more</button>
+               </div>`
+            : ""
+        }
       </div>
     `;
 
@@ -336,10 +357,16 @@ export function renderCountriesPage(appEl) {
     countryCards.forEach((card) => {
       card.addEventListener("click", () => {
         const index = parseInt(card.dataset.index, 10);
-        if (!isNaN(index) && countries[index]) {
-          showCountryDetails(countries[index]);
+        if (!isNaN(index) && visibleCountries[index]) {
+          showCountryDetails(visibleCountries[index]);
         }
       });
+    });
+
+    const loadMoreBtn = contentEl.querySelector("#load-more-countries");
+    loadMoreBtn?.addEventListener("click", () => {
+      visibleCount = Math.min(visibleCount + PAGE_SIZE, countries.length);
+      renderCountries(countries);
     });
   }
 
@@ -406,6 +433,7 @@ export function renderCountriesPage(appEl) {
             src="${country.flags?.svg || country.flags?.png || ""}"
             alt="${country.name.common} flag"
             style="max-width: 200px; max-height: 150px; border-radius: var(--radius); border: 1px solid var(--color-border);"
+            loading="lazy"
           />
         </div>
         <div style="display: grid; gap: var(--space-3);">
@@ -465,6 +493,7 @@ export function renderCountriesPage(appEl) {
 
   function handleSort() {
     currentSort = sortSelect?.value || "name-asc";
+    resetVisibleCount();
     renderCountries(sortedCountries(displayedCountries));
   }
 

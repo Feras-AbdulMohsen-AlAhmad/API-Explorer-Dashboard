@@ -7,6 +7,7 @@ import {
   updatePostPut,
   deletePost,
 } from "../services/posts.service.js";
+import { debounce, escapeHtml } from "../utils/common.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
@@ -396,21 +397,4 @@ export function renderPostsPage(appEl) {
 function snippet(text = "", length = 120) {
   if (text.length <= length) return text;
   return `${text.slice(0, length).trim()}...`;
-}
-
-function escapeHtml(value = "") {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function debounce(fn, delay = 300) {
-  let timer;
-  return (...args) => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(() => fn(...args), delay);
-  };
 }

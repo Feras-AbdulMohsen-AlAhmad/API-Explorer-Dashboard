@@ -3,6 +3,7 @@ import {
   getCurrentByCoords,
   getCurrentByAutoIP,
 } from "../services/weather.service.js";
+import { debounce } from "../utils/common.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 import { isLoading } from "../state/loading.state.js";
@@ -258,7 +259,7 @@ export function renderWeatherPage(appEl) {
           ${
             current.weather_icons?.[0]
               ? `<div style="text-align: center; margin: var(--space-4) 0;">
-                  <img src="${current.weather_icons[0]}" alt="Weather icon" style="width: 80px; height: 80px;" />
+                  <img src="${current.weather_icons[0]}" alt="Weather icon" style="width: 80px; height: 80px;" loading="lazy" />
                 </div>`
               : ""
           }
@@ -584,6 +585,8 @@ export function renderWeatherPage(appEl) {
     renderSuggestions(suggestions);
   }
 
+  const debouncedUpdateSuggestions = debounce(updateSuggestions, 200);
+
   function selectSuggestion(item) {
     if (!item || !searchInput) return;
 
@@ -770,7 +773,7 @@ export function renderWeatherPage(appEl) {
   });
 
   searchInput?.addEventListener("input", () => {
-    updateSuggestions();
+    debouncedUpdateSuggestions();
   });
 
   // Handle clicks outside suggestions container to close it

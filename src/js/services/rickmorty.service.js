@@ -1,5 +1,33 @@
 import * as rickmortyApi from "../api/rickmorty.api.js";
 import { mapRickMortyError } from "../utils/error-mapper.js";
+import { deduplicateRequest } from "../utils/request-deduplicator.js";
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const charactersCache = new Map();
+const characterCache = new Map();
+
+function buildCharactersCacheKey(options = {}) {
+  const page = options.page ?? 1;
+  const name = (options.name || "").trim().toLowerCase();
+  const status = (options.status || "").trim().toLowerCase();
+  const species = (options.species || "").trim().toLowerCase();
+  const gender = (options.gender || "").trim().toLowerCase();
+  return `characters:${page}:${name}:${status}:${species}:${gender}`;
+}
+
+function getCache(map, key) {
+  const entry = map.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    map.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache(map, key, data) {
+  map.set(key, { timestamp: Date.now(), data });
+}
 
 /**
  * Normalize a single character response
@@ -38,11 +66,19 @@ function normalizeCharacters(data) {
  */
 export async function getCharacters(options = {}) {
   try {
-    const data = await rickmortyApi.fetchCharacters(options);
-    return {
-      info: data?.info || null,
-      results: normalizeCharacters(data?.results || []),
-    };
+    const cacheKey = buildCharactersCacheKey(options);
+    const cached = getCache(charactersCache, cacheKey);
+    if (cached) return cached;
+
+    return await deduplicateRequest(cacheKey, async () => {
+      const data = await rickmortyApi.fetchCharacters(options);
+      const normalized = {
+        info: data?.info || null,
+        results: normalizeCharacters(data?.results || []),
+      };
+      setCache(charactersCache, cacheKey, normalized);
+      return normalized;
+    });
   } catch (error) {
     throw mapRickMortyError(error);
   }
@@ -55,8 +91,16 @@ export async function getCharacters(options = {}) {
  */
 export async function getCharacterById(id) {
   try {
-    const data = await rickmortyApi.fetchCharacterById(id);
-    return normalizeCharacter(data);
+    const cacheKey = `character:${id}`;
+    const cached = getCache(characterCache, cacheKey);
+    if (cached) return cached;
+
+    return await deduplicateRequest(cacheKey, async () => {
+      const data = await rickmortyApi.fetchCharacterById(id);
+      const normalized = normalizeCharacter(data);
+      setCache(characterCache, cacheKey, normalized);
+      return normalized;
+    });
   } catch (error) {
     throw mapRickMortyError(error);
   }
@@ -69,8 +113,19 @@ export async function getCharacterById(id) {
  */
 export async function getCharactersByIds(ids) {
   try {
-    const data = await rickmortyApi.fetchCharactersByIds(ids);
-    return normalizeCharacters(Array.isArray(data) ? data : [data]);
+    const idsKey = Array.isArray(ids) ? ids.join(",") : String(ids || "");
+    const cacheKey = `characters:ids:${idsKey}`;
+    const cached = getCache(charactersCache, cacheKey);
+    if (cached) return cached;
+
+    return await deduplicateRequest(cacheKey, async () => {
+      const data = await rickmortyApi.fetchCharactersByIds(ids);
+      const normalized = normalizeCharacters(
+        Array.isArray(data) ? data : [data],
+      );
+      setCache(charactersCache, cacheKey, normalized);
+      return normalized;
+    });
   } catch (error) {
     throw mapRickMortyError(error);
   }

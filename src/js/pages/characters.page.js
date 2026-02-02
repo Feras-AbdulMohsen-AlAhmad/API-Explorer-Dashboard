@@ -1,4 +1,5 @@
 import { getCharacters } from "../services/rickmorty.service.js";
+import { debounce, escapeHtml } from "../utils/common.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 import { openModal } from "../components/modal.js";
@@ -245,21 +246,4 @@ export function renderCharactersPage(appEl) {
   });
 
   loadPage(1);
-}
-
-function escapeHtml(value = "") {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function debounce(fn, delay = 300) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = window.setTimeout(() => fn(...args), delay);
-  };
 }
