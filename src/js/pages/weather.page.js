@@ -30,6 +30,21 @@ const POPULAR_CITIES = [
 ];
 
 /**
+ * Normalize error object to consistent { title, message } shape
+ * @param {Error|object} error - Error from API or JS
+ * @returns {object} Normalized error object with title and message
+ */
+function normalizeError(error) {
+  if (error?.title && error?.message) {
+    return error;
+  }
+  return {
+    title: "Something went wrong",
+    message: "An unexpected error occurred. Please try again.",
+  };
+}
+
+/**
  * Get search history from localStorage
  * @returns {Array<string>} Array of recent searches (most-recent-first)
  */
@@ -132,6 +147,8 @@ export function renderWeatherPage(appEl) {
                 id="weather-suggestions"
                 class="search-suggestions"
                 hidden
+                aria-live="polite"
+                role="listbox"
               ></div>
             </div>
             <div style="display: flex; gap: var(--space-2); align-items: center; white-space: nowrap;">
@@ -172,6 +189,11 @@ export function renderWeatherPage(appEl) {
   const debugPanelEl = appEl.querySelector("#weather-debug-panel");
   let suggestions = [];
   let activeSuggestionIndex = -1;
+
+  function setLastAction(type, payload = {}) {
+    lastAction = { type, ...payload };
+    lastUnits = currentUnits;
+  }
 
   // Initialize units from localStorage (default: metric)
   let currentUnits = localStorage.getItem("weather-units") || "m";
@@ -303,9 +325,8 @@ export function renderWeatherPage(appEl) {
 
   function renderError(error) {
     if (!contentEl) return;
-    const title = error?.title || "Something went wrong";
-    const message =
-      error?.message || "An unexpected error occurred. Please try again.";
+    const normalized = normalizeError(error);
+    const { title, message } = normalized;
     contentEl.innerHTML = `
       <div class="state-error">
         <h3>${title}</h3>
@@ -386,15 +407,20 @@ export function renderWeatherPage(appEl) {
       let data;
       if (state.type === "query") {
         if (searchInput) searchInput.value = state.query;
-        lastAction = { type: "query", query: state.query };
+        setLastAction("query", { query: state.query });
         data = await getCurrentByQuery(state.query, { units: state.units });
       } else if (state.type === "coords") {
-        const { lat, lon } = state.coords;
-        lastAction = { type: "coords", coords: { lat, lon } };
+        const { lat, lon } = state.coords || {};
+        if (typeof lat !== "number" || typeof lon !== "number") {
+          throw new Error("Invalid coordinates in saved state");
+        }
+        setLastAction("coords", { coords: { lat, lon } });
         data = await getCurrentByCoords(lat, lon, { units: state.units });
-      } else {
-        lastAction = { type: "ip" };
+      } else if (state.type === "ip") {
+        setLastAction("ip");
         data = await getCurrentByAutoIP({ units: state.units });
+      } else {
+        throw new Error("Unknown state type");
       }
 
       hideLoader();
@@ -419,7 +445,8 @@ export function renderWeatherPage(appEl) {
   }
 
   async function searchWeather(query) {
-    if (!query || query.trim() === "") {
+    const trimmedQuery = query?.trim?.() || "";
+    if (!trimmedQuery) {
       showToast("Please enter a city or country name", "error");
       return;
     }
@@ -431,17 +458,14 @@ export function renderWeatherPage(appEl) {
     }
 
     setActionsDisabled(true);
-
     closeSuggestions();
-
-    // Store last action for retry
-    lastAction = { type: "query", query: query.trim() };
-    lastUnits = currentUnits;
-
+    setLastAction("query", { query: trimmedQuery });
     showLoader(contentEl);
 
     try {
-      const data = await getCurrentByQuery(query, { units: currentUnits });
+      const data = await getCurrentByQuery(trimmedQuery, {
+        units: currentUnits,
+      });
       hideLoader();
       renderWeatherCard(data);
       showToast(
@@ -449,22 +473,16 @@ export function renderWeatherPage(appEl) {
         "success",
       );
       // Save recent search after successful fetch
-      saveRecentSearch(query);
+      saveRecentSearch(trimmedQuery);
       saveLastWeatherState({
         type: "query",
-        query: query.trim(),
+        query: trimmedQuery,
         units: currentUnits,
         timestamp: Date.now(),
       });
     } catch (error) {
       hideLoader();
-      const normalized =
-        error?.title && error?.message
-          ? error
-          : {
-              title: "Something went wrong",
-              message: "An unexpected error occurred. Please try again.",
-            };
+      const normalized = normalizeError(error);
       showToast(normalized.title, "error");
       renderError(normalized);
     } finally {
@@ -483,9 +501,7 @@ export function renderWeatherPage(appEl) {
     }
 
     setActionsDisabled(true);
-    lastAction = { type: "coords", coords: { lat, lon } };
-    lastUnits = currentUnits;
-
+    setLastAction("coords", { coords: { lat, lon } });
     showLoader(contentEl);
 
     try {
@@ -504,13 +520,7 @@ export function renderWeatherPage(appEl) {
       });
     } catch (error) {
       hideLoader();
-      const normalized =
-        error?.title && error?.message
-          ? error
-          : {
-              title: "Something went wrong",
-              message: "An unexpected error occurred. Please try again.",
-            };
+      const normalized = normalizeError(error);
       showToast(normalized.title, "error");
       renderError(normalized);
     } finally {
@@ -612,11 +622,7 @@ export function renderWeatherPage(appEl) {
     }
 
     setActionsDisabled(true);
-
-    // Store last action for retry
-    lastAction = { type: "geo" };
-    lastUnits = currentUnits;
-
+    setLastAction("geo");
     showLoader(contentEl);
 
     navigator.geolocation.getCurrentPosition(
@@ -640,13 +646,7 @@ export function renderWeatherPage(appEl) {
           });
         } catch (error) {
           hideLoader();
-          const normalized =
-            error?.title && error?.message
-              ? error
-              : {
-                  title: "Something went wrong",
-                  message: "An unexpected error occurred. Please try again.",
-                };
+          const normalized = normalizeError(error);
           showToast(normalized.title, "error");
           renderError(normalized);
         } finally {
@@ -655,22 +655,25 @@ export function renderWeatherPage(appEl) {
         }
       },
       (error) => {
-        // Geolocation denied or failed - fallback to IP-based location
+        // Geolocation denied or failed - fallback to IP without redundant toast
         if (error.code === 1) {
-          showToast(
-            "Location access denied. Fetching weather by IP address...",
-            "info",
-          );
+          // Permission denied: suppress double toast, use IP directly
+          hideLoader();
+          showToast("Using location based on your IP address", "info");
+          setActionsDisabled(false);
           useIPLocation();
         } else {
+          // Other errors: timeout, unavailable, etc.
           const errorMsg =
             {
-              2: "Unable to retrieve your location. Fetching weather by IP address...",
-              3: "Location request timed out. Fetching weather by IP address...",
+              2: "Unable to retrieve your location. Using IP address instead.",
+              3: "Location request timed out. Using IP address instead.",
             }[error.code] ||
-            "Failed to get your location. Fetching weather by IP address...";
+            "Failed to get your location. Using IP address instead.";
 
+          hideLoader();
           showToast(errorMsg, "info");
+          setActionsDisabled(false);
           useIPLocation();
         }
       },
@@ -690,11 +693,7 @@ export function renderWeatherPage(appEl) {
     }
 
     setActionsDisabled(true);
-
-    // Store last action for retry
-    lastAction = { type: "ip" };
-    lastUnits = currentUnits;
-
+    setLastAction("ip");
     showLoader(contentEl);
 
     try {
@@ -712,13 +711,7 @@ export function renderWeatherPage(appEl) {
       });
     } catch (error) {
       hideLoader();
-      const normalized =
-        error?.title && error?.message
-          ? error
-          : {
-              title: "Something went wrong",
-              message: "An unexpected error occurred. Please try again.",
-            };
+      const normalized = normalizeError(error);
       showToast(normalized.title, "error");
       renderError(normalized);
     } finally {
@@ -772,6 +765,7 @@ export function renderWeatherPage(appEl) {
 
     if (e.key === "Escape") {
       closeSuggestions();
+      searchInput?.focus();
     }
   });
 
@@ -779,23 +773,16 @@ export function renderWeatherPage(appEl) {
     updateSuggestions();
   });
 
-  suggestionsContainer?.addEventListener("click", (e) => {
-    const target = e.target.closest(".suggestion-item");
-    if (!target) return;
-    const index = Number(target.getAttribute("data-index"));
-    if (Number.isNaN(index)) return;
-    selectSuggestion(suggestions[index]);
-  });
-
-  // Close suggestions when clicking outside
-  document.addEventListener("click", (e) => {
+  // Handle clicks outside suggestions container to close it
+  const handleClickOutside = (e) => {
     if (
       !searchInput?.contains(e.target) &&
       !suggestionsContainer?.contains(e.target)
     ) {
       closeSuggestions();
     }
-  });
+  };
+  document.addEventListener("click", handleClickOutside);
 
   locationBtn?.addEventListener("click", useGeolocation);
 
