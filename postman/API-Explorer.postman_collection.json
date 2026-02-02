@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "API Explorer Dashboard",
-    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, and Open-Meteo APIs",
+    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, Weatherstack, and Open-Meteo APIs",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -329,6 +329,237 @@
         }
       ],
       "description": "Country data retrieval using REST Countries API"
+    },
+    {
+      "name": "Weatherstack",
+      "item": [
+        {
+          "name": "Current Weather",
+          "item": [
+            {
+              "name": "Get Current Weather by City",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["current"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country (e.g., Berlin, Tokyo)"
+                    },
+                    {
+                      "key": "units",
+                      "value": "{{WEATHERSTACK_UNITS}}",
+                      "description": "Units: m (metric), f (Fahrenheit), s (scientific)"
+                    },
+                    {
+                      "key": "language",
+                      "value": "{{WEATHERSTACK_LANGUAGE}}",
+                      "description": "Language code (e.g., en, es, fr)"
+                    }
+                  ]
+                },
+                "description": "Fetch current weather for a city or country.\n\nExpected fields: location.name, location.country, location.localtime, current.temperature, current.weather_descriptions, current.humidity, current.wind_speed, current.pressure, current.feelslike."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Location-based Weather",
+          "item": [
+            {
+              "name": "Get Current Weather by Coordinates",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query={{LATITUDE}},{{LONGITUDE}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["current"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "{{LATITUDE}},{{LONGITUDE}}",
+                      "description": "Latitude,Longitude (e.g., 52.52,13.405)"
+                    },
+                    {
+                      "key": "units",
+                      "value": "{{WEATHERSTACK_UNITS}}",
+                      "description": "Units: m, f, s"
+                    },
+                    {
+                      "key": "language",
+                      "value": "{{WEATHERSTACK_LANGUAGE}}",
+                      "description": "Language code"
+                    }
+                  ]
+                },
+                "description": "Fetch current weather using coordinates (lat, lon). Useful for geolocation-based weather."
+              }
+            },
+            {
+              "name": "Get Current Weather by IP",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query=fetch:ip&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["current"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "fetch:ip",
+                      "description": "Auto-detect location by IP address"
+                    },
+                    {
+                      "key": "units",
+                      "value": "{{WEATHERSTACK_UNITS}}",
+                      "description": "Units: m, f, s"
+                    },
+                    {
+                      "key": "language",
+                      "value": "{{WEATHERSTACK_LANGUAGE}}",
+                      "description": "Language code"
+                    }
+                  ]
+                },
+                "description": "Auto-detect user location by IP address. Useful as a fallback when geolocation is denied."
+              }
+            },
+            {
+              "name": "Autocomplete Location",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/autocomplete?access_key={{WEATHERSTACK_API_KEY}}&query={{SEARCH_QUERY}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["autocomplete"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "{{SEARCH_QUERY}}",
+                      "description": "Partial location name (min 2 characters)"
+                    }
+                  ]
+                },
+                "description": "Autocomplete location search (paid plan). Returns matching locations with name, country, lat, lon."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forecast / Historical",
+          "item": [
+            {
+              "name": "Get Forecast (7 Days)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/forecast?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&forecast_days=7&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["forecast"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country"
+                    },
+                    {
+                      "key": "forecast_days",
+                      "value": "7",
+                      "description": "Forecast days (1-14)"
+                    },
+                    {
+                      "key": "units",
+                      "value": "{{WEATHERSTACK_UNITS}}",
+                      "description": "Units: m, f, s"
+                    },
+                    {
+                      "key": "language",
+                      "value": "{{WEATHERSTACK_LANGUAGE}}",
+                      "description": "Language code"
+                    }
+                  ]
+                },
+                "description": "7-day forecast (paid plan). Returns forecast object with daily summaries."
+              }
+            },
+            {
+              "name": "Get Historical Weather by Date",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERSTACK_URL}}/historical?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&historical_date={{HISTORICAL_DATE}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
+                  "host": ["{{WEATHERSTACK_URL}}"],
+                  "path": ["historical"],
+                  "query": [
+                    {
+                      "key": "access_key",
+                      "value": "{{WEATHERSTACK_API_KEY}}",
+                      "description": "Weatherstack API access key"
+                    },
+                    {
+                      "key": "query",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country"
+                    },
+                    {
+                      "key": "historical_date",
+                      "value": "{{HISTORICAL_DATE}}",
+                      "description": "Date in YYYY-MM-DD format"
+                    },
+                    {
+                      "key": "units",
+                      "value": "{{WEATHERSTACK_UNITS}}",
+                      "description": "Units: m, f, s"
+                    },
+                    {
+                      "key": "language",
+                      "value": "{{WEATHERSTACK_LANGUAGE}}",
+                      "description": "Language code"
+                    }
+                  ]
+                },
+                "description": "Historical weather for a specific date (paid plan). Returns historical object keyed by date."
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Weather data using Weatherstack API"
     },
     {
       "name": "Open-Meteo",
