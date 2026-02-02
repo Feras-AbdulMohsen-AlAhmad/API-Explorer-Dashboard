@@ -212,3 +212,57 @@ export function mapCountriesError(error) {
 
   return fallback;
 }
+
+/**
+ * Map Rick & Morty API errors
+ * @param {any} error - Error object or string
+ * @returns {{ title: string, message: string, code?: string }}
+ */
+export function mapRickMortyError(error) {
+  const fallback = {
+    title: "Rick & Morty service error",
+    message: "Failed to load characters. Please try again.",
+  };
+
+  if (!error) return fallback;
+
+  if (error.title && error.message) {
+    return error;
+  }
+
+  const message =
+    typeof error === "string"
+      ? error
+      : error?.message
+        ? String(error.message)
+        : "";
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("network") ||
+    lowerMessage.includes("request failed")
+  ) {
+    return {
+      title: "Network error",
+      message:
+        "Unable to connect to Rick & Morty service. Please check your internet connection.",
+    };
+  }
+
+  if (lowerMessage.includes("404") || lowerMessage.includes("not found")) {
+    return {
+      title: "Characters not found",
+      message: "No characters match your search criteria.",
+    };
+  }
+
+  if (lowerMessage.includes("invalid") || lowerMessage.includes("validation")) {
+    return {
+      title: "Invalid filter",
+      message: "Please check your filter parameters and try again.",
+    };
+  }
+
+  return fallback;
+}

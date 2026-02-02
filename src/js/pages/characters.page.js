@@ -89,10 +89,11 @@ export function renderCharactersPage(appEl) {
       renderPagination();
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load characters";
-      showToast(message, "error");
-      renderError(message);
+      const title = error?.title || "Failed to load characters";
+      const message = error?.message || "Please try again.";
+      const displayMessage = `${title}: ${message}`;
+      showToast(displayMessage, "error");
+      renderError(displayMessage);
     }
   }
 
@@ -105,7 +106,7 @@ export function renderCharactersPage(appEl) {
   function renderCharacters(list) {
     if (!list || list.length === 0) {
       contentEl.innerHTML = `
-				<div class="empty-state">
+				<div class="state-empty">
 					<h3>No characters found</h3>
 					<p>Try adjusting filters or pagination.</p>
 				</div>
@@ -167,7 +168,7 @@ export function renderCharactersPage(appEl) {
 
   function renderError(message) {
     contentEl.innerHTML = `
-			<div class="error-state">
+			<div class="state-error">
 				<h3>Unable to load characters</h3>
 				<p>${escapeHtml(message)}</p>
 				<div class="actions" style="justify-content: center; margin-top: var(--space-4);">
