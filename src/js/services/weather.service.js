@@ -2,6 +2,7 @@
 import * as http from "../api/httpClient.js";
 import { ENDPOINTS } from "../api/endpoints.js";
 import { getConfig } from "../config.js";
+import { mapWeatherError } from "../utils/error-mapper.js";
 
 // Constants
 const BASE_URL = ENDPOINTS.WEATHERSTACK;
@@ -177,7 +178,7 @@ export async function getCurrentByQuery(query, options = {}) {
 
   // Validate query
   if (!query || typeof query !== "string" || query.trim() === "") {
-    throw new Error("Query is required and must be a non-empty string");
+    throw mapWeatherError({ type: "validation", message: "query_required" });
   }
 
   const trimmedQuery = query.trim();
@@ -200,14 +201,12 @@ export async function getCurrentByQuery(query, options = {}) {
     // Handle Weatherstack error format: { success: false, error: { code, type, info } }
     if (response.data?.success === false || response.data?.error) {
       const error = response.data.error || {};
-      const code = error.code || "UNKNOWN";
-      const info = error.info || "Failed to fetch weather data";
-      throw new Error(`[Weatherstack ${code}] ${info}`);
+      throw mapWeatherError({ source: "weatherstack", ...error });
     }
 
     // Validate response has weather data
     if (!response.data?.current) {
-      throw new Error("No weather data available for this location");
+      throw mapWeatherError({ source: "weatherstack", message: "no_data" });
     }
 
     // Normalize response structure
@@ -221,10 +220,7 @@ export async function getCurrentByQuery(query, options = {}) {
 
     return normalizedData;
   } catch (error) {
-    // Re-throw with clean message
-    const message =
-      error instanceof Error ? error.message : "Weather service error";
-    throw new Error(message);
+    throw mapWeatherError(error);
   }
 }
 
@@ -239,15 +235,15 @@ export async function getCurrentByQuery(query, options = {}) {
 export async function getCurrentByCoords(lat, lon, options = {}) {
   // Validate coordinates
   if (typeof lat !== "number" || typeof lon !== "number") {
-    throw new Error("Latitude and longitude must be numbers");
+    throw mapWeatherError({ type: "validation", message: "invalid_coords" });
   }
 
   if (lat < -90 || lat > 90) {
-    throw new Error("Latitude must be between -90 and 90");
+    throw mapWeatherError({ type: "validation", message: "invalid_coords" });
   }
 
   if (lon < -180 || lon > 180) {
-    throw new Error("Longitude must be between -180 and 180");
+    throw mapWeatherError({ type: "validation", message: "invalid_coords" });
   }
 
   // Format as "lat,lon" for Weatherstack

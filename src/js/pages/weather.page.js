@@ -282,12 +282,15 @@ export function renderWeatherPage(appEl) {
     `;
   }
 
-  function renderError(message) {
+  function renderError(error) {
     if (!contentEl) return;
+    const title = error?.title || "Something went wrong";
+    const message =
+      error?.message || "An unexpected error occurred. Please try again.";
     contentEl.innerHTML = `
       <div class="state-error">
-        <h3>Unable to Load Weather</h3>
-        <p>${message || "An error occurred while fetching weather data."}</p>
+        <h3>${title}</h3>
+        <p>${message}</p>
         <div class="actions" style="justify-content: center; margin-top: var(--space-4);">
           <button class="btn btn-primary" id="retry-btn">Retry</button>
         </div>
@@ -349,10 +352,15 @@ export function renderWeatherPage(appEl) {
       saveRecentSearch(query);
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load weather data";
-      showToast(message, "error");
-      renderError(message);
+      const normalized =
+        error?.title && error?.message
+          ? error
+          : {
+              title: "Something went wrong",
+              message: "An unexpected error occurred. Please try again.",
+            };
+      showToast(normalized.title, "error");
+      renderError(normalized);
     }
   }
 
@@ -465,12 +473,15 @@ export function renderWeatherPage(appEl) {
           );
         } catch (error) {
           hideLoader();
-          const message =
-            error instanceof Error
-              ? error.message
-              : "Failed to load weather data";
-          showToast(message, "error");
-          renderError(message);
+          const normalized =
+            error?.title && error?.message
+              ? error
+              : {
+                  title: "Something went wrong",
+                  message: "An unexpected error occurred. Please try again.",
+                };
+          showToast(normalized.title, "error");
+          renderError(normalized);
         }
       },
       (error) => {
@@ -520,10 +531,15 @@ export function renderWeatherPage(appEl) {
       );
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load weather data";
-      showToast(message, "error");
-      renderError(message);
+      const normalized =
+        error?.title && error?.message
+          ? error
+          : {
+              title: "Something went wrong",
+              message: "An unexpected error occurred. Please try again.",
+            };
+      showToast(normalized.title, "error");
+      renderError(normalized);
     }
   }
 
