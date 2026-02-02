@@ -6,19 +6,31 @@ import {
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 
-const DEBOUNCE_MS = 250; // 250-300ms debounce for local autocomplete
-const MIN_SEARCH_LENGTH = 2; // Minimum 2 characters for suggestions
-const MAX_SEARCH_HISTORY = 10; // Store last 10 searches
-const SEARCH_HISTORY_KEY = "weather-search-history";
+const RECENT_SEARCHES_KEY = "weather_recent_searches";
+const MAX_RECENT_SEARCHES = 5;
+const MIN_SUGGESTION_LENGTH = 1;
+const POPULAR_CITIES = [
+  "London",
+  "Paris",
+  "Berlin",
+  "Madrid",
+  "Rome",
+  "Amsterdam",
+  "New York",
+  "Tokyo",
+  "Dubai",
+  "Cairo",
+];
 
 /**
  * Get search history from localStorage
  * @returns {Array<string>} Array of recent searches (most-recent-first)
  */
-function getSearchHistory() {
+function getRecentSearches() {
   try {
-    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
-    return history ? JSON.parse(history) : [];
+    const recent = localStorage.getItem(RECENT_SEARCHES_KEY);
+    const parsed = recent ? JSON.parse(recent) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     return [];
   }
@@ -28,53 +40,57 @@ function getSearchHistory() {
  * Add search to history, avoiding duplicates (dedupe)
  * @param {string} query - Search query
  */
-function addToSearchHistory(query) {
-  if (!query || query.trim().length < 2) return;
+function saveRecentSearch(query) {
+  if (!query || query.trim().length === 0) return;
 
   const trimmed = query.trim();
-  let history = getSearchHistory();
+  let recent = getRecentSearches();
 
-  // Remove if already exists (dedupe)
-  history = history.filter(
+  // Remove duplicates (case-insensitive)
+  recent = recent.filter(
     (item) => item.toLowerCase() !== trimmed.toLowerCase(),
   );
 
   // Add to front (most-recent-first)
-  history.unshift(trimmed);
+  recent.unshift(trimmed);
 
-  // Keep only last 10
-  history = history.slice(0, MAX_SEARCH_HISTORY);
+  // Keep only last 5
+  recent = recent.slice(0, MAX_RECENT_SEARCHES);
 
   try {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
   } catch (e) {
     // localStorage full or unavailable - silently fail
   }
 }
 
 /**
- * Clear all search history
+ * Filter suggestions from recent searches and popular cities
+ * @param {string} inputValue - Current input value
+ * @returns {Array<string>} Filtered suggestions (max 5)
  */
-function clearSearchHistory() {
-  try {
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-  } catch (e) {
-    // silently fail
+function filterSuggestions(inputValue) {
+  if (!inputValue || inputValue.trim().length < MIN_SUGGESTION_LENGTH) {
+    return [];
   }
-}
 
-/**
- * Filter search history by query (case-insensitive partial match)
- * @param {string} query - Search query
- * @returns {Array<string>} Matching searches
- */
-function filterSearchHistory(query) {
-  if (!query || query.trim().length < MIN_SEARCH_LENGTH) return [];
+  const lowerInput = inputValue.trim().toLowerCase();
+  const recent = getRecentSearches();
+  const merged = [...recent, ...POPULAR_CITIES];
 
-  const lowerQuery = query.trim().toLowerCase();
-  return getSearchHistory().filter((item) =>
-    item.toLowerCase().includes(lowerQuery),
-  );
+  const unique = merged.filter((item, index, self) => {
+    return (
+      self.findIndex((entry) => entry.toLowerCase() === item.toLowerCase()) ===
+      index
+    );
+  });
+
+  const matches = unique.filter((item) => {
+    const lowerItem = item.toLowerCase();
+    return lowerItem.startsWith(lowerInput) || lowerItem.includes(lowerInput);
+  });
+
+  return matches.slice(0, 5);
 }
 
 export function renderWeatherPage(appEl) {
@@ -107,21 +123,8 @@ export function renderWeatherPage(appEl) {
               />
               <div
                 id="weather-suggestions"
-                style="
-                  display: none;
-                  position: absolute;
-                  top: 100%;
-                  left: 0;
-                  right: 0;
-                  background: white;
-                  border: 1px solid var(--color-border);
-                  border-top: none;
-                  border-radius: 0 0 var(--radius) var(--radius);
-                  max-height: 300px;
-                  overflow-y: auto;
-                  z-index: 100;
-                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                "
+                class="search-suggestions"
+                hidden
               ></div>
             </div>
             <div style="display: flex; gap: var(--space-2); align-items: center; white-space: nowrap;">
@@ -158,8 +161,8 @@ export function renderWeatherPage(appEl) {
   const unitsToggle = appEl.querySelector("#weather-units-toggle");
   const unitsLabel = appEl.querySelector("#weather-units-label");
   const suggestionsContainer = appEl.querySelector("#weather-suggestions");
-  let debounceTimer;
   let suggestions = [];
+  let activeSuggestionIndex = -1;
 
   // Initialize units from localStorage (default: metric)
   let currentUnits = localStorage.getItem("weather-units") || "m";
@@ -326,6 +329,8 @@ export function renderWeatherPage(appEl) {
 
     if (!contentEl) return;
 
+    closeSuggestions();
+
     // Store last action for retry
     lastAction = { type: "query", query: query.trim() };
     lastUnits = currentUnits;
@@ -340,8 +345,8 @@ export function renderWeatherPage(appEl) {
         `Weather for ${data.location.name} loaded successfully`,
         "success",
       );
-      // Add to search history after successful search
-      addToSearchHistory(query);
+      // Save recent search after successful fetch
+      saveRecentSearch(query);
     } catch (error) {
       hideLoader();
       const message =
@@ -351,120 +356,82 @@ export function renderWeatherPage(appEl) {
     }
   }
 
+  function openSuggestions() {
+    if (suggestionsContainer) {
+      suggestionsContainer.hidden = false;
+    }
+  }
+
+  function closeSuggestions() {
+    if (suggestionsContainer) {
+      suggestionsContainer.hidden = true;
+      suggestionsContainer.innerHTML = "";
+    }
+    suggestions = [];
+    activeSuggestionIndex = -1;
+  }
+
   function renderSuggestions(items) {
     if (!suggestionsContainer) return;
 
     if (!items || items.length === 0) {
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.innerHTML =
+        '<div class="suggestion-empty">No suggestions</div>';
+      openSuggestions();
       return;
     }
 
     suggestionsContainer.innerHTML = items
-      .map(
-        (item, idx) => `
-      <div
-        data-index="${idx}"
-        class="suggestion-item"
-        style="
-          padding: var(--space-3);
-          border-bottom: 1px solid var(--color-border);
-          cursor: pointer;
-          transition: background-color 0.2s;
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-        "
-        onmouseover="this.style.backgroundColor = 'var(--color-bg-secondary)';"
-        onmouseout="this.style.backgroundColor = 'transparent';"
-      >
-        <span style="color: var(--color-muted); font-size: var(--font-size-sm);">🕐</span>
-        <span style="font-weight: 500;">${item}</span>
-      </div>
-    `,
-      )
+      .map((item, idx) => {
+        const activeClass =
+          idx === activeSuggestionIndex ? "suggestion-item--active" : "";
+        return `
+          <div
+            data-index="${idx}"
+            class="suggestion-item ${activeClass}"
+          >
+            ${item}
+          </div>
+        `;
+      })
       .join("");
 
-    // Add clear history button if there are items
-    if (items.length > 0) {
-      suggestionsContainer.innerHTML += `
-        <div style="
-          padding: var(--space-2) var(--space-3);
-          border-top: 1px solid var(--color-border);
-          text-align: center;
-        ">
-          <button id="clear-history-btn" style="
-            background: none;
-            border: none;
-            color: var(--color-muted);
-            cursor: pointer;
-            font-size: var(--font-size-sm);
-            text-decoration: underline;
-            padding: var(--space-1) 0;
-          ">
-            Clear recent searches
-          </button>
-        </div>
-      `;
+    openSuggestions();
+  }
+
+  function updateSuggestions() {
+    const inputValue = searchInput?.value || "";
+    if (inputValue.trim().length < MIN_SUGGESTION_LENGTH) {
+      closeSuggestions();
+      return;
     }
 
-    suggestionsContainer.style.display = "block";
-
-    // Add click handlers to suggestion items
-    suggestionsContainer
-      .querySelectorAll(".suggestion-item")
-      .forEach((item) => {
-        item.addEventListener("click", () => {
-          const index = parseInt(item.getAttribute("data-index"), 10);
-          selectSuggestion(suggestions[index]);
-        });
-      });
-
-    // Add clear history handler
-    const clearBtn = suggestionsContainer.querySelector("#clear-history-btn");
-    if (clearBtn) {
-      clearBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        clearSearchHistory();
-        suggestions = [];
-        suggestionsContainer.style.display = "none";
-        suggestionsContainer.innerHTML = "";
-        showToast("Recent searches cleared", "success");
-      });
-    }
+    suggestions = filterSuggestions(inputValue);
+    activeSuggestionIndex = suggestions.length > 0 ? 0 : -1;
+    renderSuggestions(suggestions);
   }
 
   function selectSuggestion(item) {
     if (!item || !searchInput) return;
 
     searchInput.value = item;
-    suggestionsContainer.style.display = "none";
-    suggestionsContainer.innerHTML = "";
-    suggestions = [];
-
-    // Search with the selected item
+    closeSuggestions();
     searchWeather(item);
   }
 
-  async function fetchSuggestions(query) {
-    if (!query || query.trim().length < MIN_SEARCH_LENGTH) {
-      // Show all recent searches if input is empty or minimal
-      if (query.trim().length === 0) {
-        const allHistory = getSearchHistory();
-        suggestions = allHistory;
-        renderSuggestions(allHistory);
-        return;
-      }
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
-      suggestions = [];
-      return;
+  function moveSuggestion(direction) {
+    if (!suggestions.length) return;
+
+    const lastIndex = suggestions.length - 1;
+    if (direction === "down") {
+      activeSuggestionIndex =
+        activeSuggestionIndex < lastIndex ? activeSuggestionIndex + 1 : 0;
+    } else {
+      activeSuggestionIndex =
+        activeSuggestionIndex > 0 ? activeSuggestionIndex - 1 : lastIndex;
     }
 
-    // Filter history based on query (no API calls - local only)
-    const items = filterSearchHistory(query);
-    suggestions = items;
-    renderSuggestions(items);
+    renderSuggestions(suggestions);
   }
 
   function useGeolocation() {
@@ -562,36 +529,62 @@ export function renderWeatherPage(appEl) {
 
   searchBtn?.addEventListener("click", () => {
     const query = searchInput?.value?.trim();
+    closeSuggestions();
     searchWeather(query);
   });
 
-  searchInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const query = searchInput.value.trim();
-      suggestionsContainer.style.display = "none";
-      searchWeather(query);
-    }
-    if (e.key === "Escape") {
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
-      suggestions = [];
+  searchInput?.addEventListener("focus", () => {
+    if (searchInput.value.trim().length >= MIN_SUGGESTION_LENGTH) {
+      updateSuggestions();
     }
   });
 
-  searchInput?.addEventListener("input", (e) => {
-    clearTimeout(debounceTimer);
-    const query = e.target.value.trim();
+  searchInput?.addEventListener("keydown", (e) => {
+    const isOpen = suggestionsContainer && !suggestionsContainer.hidden;
 
-    if (query.length < MIN_SEARCH_LENGTH) {
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
-      suggestions = [];
+    if (e.key === "ArrowDown") {
+      if (isOpen) {
+        e.preventDefault();
+        moveSuggestion("down");
+      }
       return;
     }
 
-    debounceTimer = setTimeout(() => {
-      fetchSuggestions(query);
-    }, DEBOUNCE_MS);
+    if (e.key === "ArrowUp") {
+      if (isOpen) {
+        e.preventDefault();
+        moveSuggestion("up");
+      }
+      return;
+    }
+
+    if (e.key === "Enter") {
+      if (isOpen && activeSuggestionIndex >= 0) {
+        e.preventDefault();
+        selectSuggestion(suggestions[activeSuggestionIndex]);
+      } else {
+        const query = searchInput.value.trim();
+        closeSuggestions();
+        searchWeather(query);
+      }
+      return;
+    }
+
+    if (e.key === "Escape") {
+      closeSuggestions();
+    }
+  });
+
+  searchInput?.addEventListener("input", () => {
+    updateSuggestions();
+  });
+
+  suggestionsContainer?.addEventListener("click", (e) => {
+    const target = e.target.closest(".suggestion-item");
+    if (!target) return;
+    const index = Number(target.getAttribute("data-index"));
+    if (Number.isNaN(index)) return;
+    selectSuggestion(suggestions[index]);
   });
 
   // Close suggestions when clicking outside
@@ -600,9 +593,7 @@ export function renderWeatherPage(appEl) {
       !searchInput?.contains(e.target) &&
       !suggestionsContainer?.contains(e.target)
     ) {
-      suggestionsContainer.style.display = "none";
-      suggestionsContainer.innerHTML = "";
-      suggestions = [];
+      closeSuggestions();
     }
   });
 
