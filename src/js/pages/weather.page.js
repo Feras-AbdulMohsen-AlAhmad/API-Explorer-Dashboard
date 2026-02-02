@@ -5,6 +5,7 @@ import {
 } from "../services/weather.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
+import { isLoading } from "../state/loading.state.js";
 
 const RECENT_SEARCHES_KEY = "weather_recent_searches";
 const MAX_RECENT_SEARCHES = 5;
@@ -309,6 +310,10 @@ export function renderWeatherPage(appEl) {
       return;
     }
 
+    if (isLoading("weather")) {
+      return;
+    }
+
     switch (lastAction.type) {
       case "query":
         searchWeather(lastAction.query);
@@ -324,6 +329,11 @@ export function renderWeatherPage(appEl) {
     }
   }
 
+  function setActionsDisabled(disabled) {
+    if (searchBtn) searchBtn.disabled = disabled;
+    if (locationBtn) locationBtn.disabled = disabled;
+  }
+
   async function searchWeather(query) {
     if (!query || query.trim() === "") {
       showToast("Please enter a city or country name", "error");
@@ -331,6 +341,12 @@ export function renderWeatherPage(appEl) {
     }
 
     if (!contentEl) return;
+
+    if (isLoading("weather")) {
+      return;
+    }
+
+    setActionsDisabled(true);
 
     closeSuggestions();
 
@@ -361,6 +377,8 @@ export function renderWeatherPage(appEl) {
             };
       showToast(normalized.title, "error");
       renderError(normalized);
+    } finally {
+      setActionsDisabled(false);
     }
   }
 
@@ -452,6 +470,12 @@ export function renderWeatherPage(appEl) {
 
     if (!contentEl) return;
 
+    if (isLoading("weather")) {
+      return;
+    }
+
+    setActionsDisabled(true);
+
     // Store last action for retry
     lastAction = { type: "geo" };
     lastUnits = currentUnits;
@@ -482,6 +506,8 @@ export function renderWeatherPage(appEl) {
                 };
           showToast(normalized.title, "error");
           renderError(normalized);
+        } finally {
+          setActionsDisabled(false);
         }
       },
       (error) => {
@@ -515,6 +541,12 @@ export function renderWeatherPage(appEl) {
   async function useIPLocation() {
     if (!contentEl) return;
 
+    if (isLoading("weather")) {
+      return;
+    }
+
+    setActionsDisabled(true);
+
     // Store last action for retry
     lastAction = { type: "ip" };
     lastUnits = currentUnits;
@@ -540,6 +572,8 @@ export function renderWeatherPage(appEl) {
             };
       showToast(normalized.title, "error");
       renderError(normalized);
+    } finally {
+      setActionsDisabled(false);
     }
   }
 

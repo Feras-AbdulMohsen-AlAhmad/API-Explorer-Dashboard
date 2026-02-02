@@ -3,6 +3,8 @@ import * as http from "../api/httpClient.js";
 import { ENDPOINTS } from "../api/endpoints.js";
 import { getConfig } from "../config.js";
 import { mapWeatherError } from "../utils/error-mapper.js";
+import { startLoading, stopLoading } from "../state/loading.state.js";
+import { deduplicateRequest } from "../utils/request-deduplicator.js";
 
 // Constants
 const BASE_URL = ENDPOINTS.WEATHERSTACK;
@@ -52,6 +54,17 @@ function normalizeQuery(query) {
 function buildCacheKey(query, units) {
   const normalized = normalizeQuery(query);
   return `${CACHE_PREFIX}${units}:${normalized}`;
+}
+
+/**
+ * Build a request deduplication key for weather fetch
+ * @param {string} type - Request type (query | coords | ip)
+ * @param {string} value - Query or coordinates
+ * @param {string} units - Temperature units
+ * @returns {string} Deduplication key
+ */
+function buildDedupKey(type, value, units) {
+  return `weather:${type}:${value}:${units}`;
 }
 
 /**
@@ -182,46 +195,51 @@ export async function getCurrentByQuery(query, options = {}) {
   }
 
   const trimmedQuery = query.trim();
+  const dedupKey = buildDedupKey("query", trimmedQuery, units);
 
-  // Check cache first (unless explicitly skipped)
-  if (!skipCache) {
-    const cacheKey = buildCacheKey(trimmedQuery, units);
-    const cachedData = readCache(cacheKey);
-    if (cachedData) {
-      return cachedData;
-    }
-  }
-
-  // Make API request
-  const url = buildWeatherstackUrl(trimmedQuery, units, language);
-
-  try {
-    const response = await http.get(url);
-
-    // Handle Weatherstack error format: { success: false, error: { code, type, info } }
-    if (response.data?.success === false || response.data?.error) {
-      const error = response.data.error || {};
-      throw mapWeatherError({ source: "weatherstack", ...error });
-    }
-
-    // Validate response has weather data
-    if (!response.data?.current) {
-      throw mapWeatherError({ source: "weatherstack", message: "no_data" });
-    }
-
-    // Normalize response structure
-    const normalizedData = normalizeWeatherData(response.data);
-
-    // Cache the successful response
+  return deduplicateRequest(dedupKey, async () => {
+    // Check cache first (unless explicitly skipped)
     if (!skipCache) {
       const cacheKey = buildCacheKey(trimmedQuery, units);
-      writeCache(cacheKey, normalizedData);
+      const cachedData = readCache(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
     }
 
-    return normalizedData;
-  } catch (error) {
-    throw mapWeatherError(error);
-  }
+    startLoading("weather");
+    try {
+      // Make API request
+      const url = buildWeatherstackUrl(trimmedQuery, units, language);
+      const response = await http.get(url);
+
+      // Handle Weatherstack error format: { success: false, error: { code, type, info } }
+      if (response.data?.success === false || response.data?.error) {
+        const error = response.data.error || {};
+        throw mapWeatherError({ source: "weatherstack", ...error });
+      }
+
+      // Validate response has weather data
+      if (!response.data?.current) {
+        throw mapWeatherError({ source: "weatherstack", message: "no_data" });
+      }
+
+      // Normalize response structure
+      const normalizedData = normalizeWeatherData(response.data);
+
+      // Cache the successful response
+      if (!skipCache) {
+        const cacheKey = buildCacheKey(trimmedQuery, units);
+        writeCache(cacheKey, normalizedData);
+      }
+
+      return normalizedData;
+    } catch (error) {
+      throw mapWeatherError(error);
+    } finally {
+      stopLoading("weather");
+    }
+  });
 }
 
 /**
@@ -248,7 +266,8 @@ export async function getCurrentByCoords(lat, lon, options = {}) {
 
   // Format as "lat,lon" for Weatherstack
   const query = `${lat},${lon}`;
-  return getCurrentByQuery(query, options);
+  const dedupKey = buildDedupKey("coords", query, options?.units || "m");
+  return deduplicateRequest(dedupKey, () => getCurrentByQuery(query, options));
 }
 
 /**
@@ -259,5 +278,8 @@ export async function getCurrentByCoords(lat, lon, options = {}) {
  * @throws {Error} If API request fails
  */
 export async function getCurrentByAutoIP(options = {}) {
-  return getCurrentByQuery("fetch:ip", options);
+  const dedupKey = buildDedupKey("ip", "fetch:ip", options?.units || "m");
+  return deduplicateRequest(dedupKey, () =>
+    getCurrentByQuery("fetch:ip", options),
+  );
 }
