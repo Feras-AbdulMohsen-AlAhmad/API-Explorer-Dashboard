@@ -1,0 +1,648 @@
+{
+  "info": {
+    "name": "API Explorer Dashboard",
+    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, WeatherAPI.com, and Open-Meteo APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "JSONPlaceholder",
+      "item": [
+        {
+          "name": "Get All Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts"]
+            },
+            "description": "Retrieve all posts from JSONPlaceholder"
+          }
+        },
+        {
+          "name": "Get Post by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Retrieve a specific post by ID"
+          }
+        },
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}/comments",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}", "comments"]
+            },
+            "description": "Retrieve all comments for a specific post"
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Post Title\",\n  \"body\": \"This is the content of the new post.\",\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts"]
+            },
+            "description": "Create a new post"
+          }
+        },
+        {
+          "name": "Update Post (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{post_id}},\n  \"title\": \"Updated Post Title\",\n  \"body\": \"This is the updated content.\",\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Update a post using PUT (replaces entire resource)"
+          }
+        },
+        {
+          "name": "Update Post (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Partially Updated Title\"\n}"
+            },
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Update a post using PATCH (partial update)"
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{jsonplaceholder_url}}/posts/{{post_id}}",
+              "host": ["{{jsonplaceholder_url}}"],
+              "path": ["posts", "{{post_id}}"]
+            },
+            "description": "Delete a post by ID"
+          }
+        }
+      ],
+      "description": "CRUD operations for posts and comments using JSONPlaceholder API"
+    },
+    {
+      "name": "Rick & Morty",
+      "item": [
+        {
+          "name": "Get Characters (Default)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"]
+            },
+            "description": "Get all characters with default pagination (page 1)"
+          }
+        },
+        {
+          "name": "Get Characters (Page 2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?page=2",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Get characters from page 2"
+          }
+        },
+        {
+          "name": "Filter by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?name=rick",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "rick"
+                }
+              ]
+            },
+            "description": "Filter characters by name"
+          }
+        },
+        {
+          "name": "Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?status=alive",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "alive",
+                  "description": "Options: alive, dead, unknown"
+                }
+              ]
+            },
+            "description": "Filter characters by status (alive, dead, unknown)"
+          }
+        },
+        {
+          "name": "Filter by Species",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?species=human",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "species",
+                  "value": "human"
+                }
+              ]
+            },
+            "description": "Filter characters by species"
+          }
+        },
+        {
+          "name": "Filter by Gender",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?gender=male",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "gender",
+                  "value": "male",
+                  "description": "Options: female, male, genderless, unknown"
+                }
+              ]
+            },
+            "description": "Filter characters by gender"
+          }
+        },
+        {
+          "name": "Multiple Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rickmorty_url}}/character?name=rick&status=alive&species=human",
+              "host": ["{{rickmorty_url}}"],
+              "path": ["character"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "rick"
+                },
+                {
+                  "key": "status",
+                  "value": "alive"
+                },
+                {
+                  "key": "species",
+                  "value": "human"
+                }
+              ]
+            },
+            "description": "Combine multiple filters for precise results"
+          }
+        }
+      ],
+      "description": "Character queries with pagination and filtering using Rick & Morty API"
+    },
+    {
+      "name": "REST Countries",
+      "item": [
+        {
+          "name": "Get All Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/all",
+              "host": ["{{restcountries_url}}"],
+              "path": ["all"]
+            },
+            "description": "Retrieve information about all countries"
+          }
+        },
+        {
+          "name": "Get Country by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/name/netherlands",
+              "host": ["{{restcountries_url}}"],
+              "path": ["name", "netherlands"]
+            },
+            "description": "Search for a country by name"
+          }
+        },
+        {
+          "name": "Get Country by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/alpha/nl",
+              "host": ["{{restcountries_url}}"],
+              "path": ["alpha", "nl"]
+            },
+            "description": "Get country by ISO 3166-1 alpha-2 or alpha-3 code"
+          }
+        },
+        {
+          "name": "Filter by Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{restcountries_url}}/region/europe",
+              "host": ["{{restcountries_url}}"],
+              "path": ["region", "europe"]
+            },
+            "description": "Get all countries in a specific region"
+          }
+        }
+      ],
+      "description": "Country data retrieval using REST Countries API"
+    },
+    {
+      "name": "WeatherAPI.com",
+      "item": [
+        {
+          "name": "Current Weather",
+          "item": [
+            {
+              "name": "Get Current Weather by City",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country (e.g., Berlin, Tokyo)"
+                    },
+                    {
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
+                    }
+                  ]
+                },
+                "description": "GET Current Weather by City\n\n**Purpose:** Fetch real-time weather data for a specified city or country.\n\n**Required Parameters:** key (API key), q (city/country name)\n\n**Response Fields:**\n- location: { name, country, region, lat, lon, tz_id, localtime }\n- current: { last_updated, temp_c, temp_f, is_day, condition: { text, icon, code }, humidity, wind_kph, wind_degree, pressure_mb, precip_mm, feelslike_c, vis_km, uv, gust_kph }\n\n**Common Fields to Display:**\n- current.temp_c or current.temp_f (temperature)\n- current.condition.text (weather description)\n- current.condition.icon (weather icon URL)\n- current.humidity (%)\n- current.wind_kph (wind speed)\n- current.feelslike_c (feels like temperature)\n- location.localtime (local time)\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: Parameter q not provided\n- 1006: No location found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2008: API key disabled\n\n**Rate Limits:** Free 1M/month, Pro 10M/month, Business 100M/month\n\n**Setup:** Replace {{WEATHERAPI_KEY}} with key from https://www.weatherapi.com/"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Location-based Weather",
+          "item": [
+            {
+              "name": "Get Current Weather by Coordinates",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q={{LATITUDE}},{{LONGITUDE}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "{{LATITUDE}},{{LONGITUDE}}",
+                      "description": "Latitude,Longitude (e.g., 52.52,13.405)"
+                    },
+                    {
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
+                    }
+                  ]
+                },
+                "description": "GET Current Weather by Coordinates\n\n**Purpose:** Fetch weather for GPS/map coordinates. Perfect for geolocation apps and mobile weather.\n\n**Query Format:** q={{LATITUDE}},{{LONGITUDE}} (e.g., 40.7128,-74.0060)\n\n**Coordinate Ranges:** Lat -90 to +90, Lon -180 to +180\n\n**Common Use Cases:**\n- Browser geolocation integration\n- Mobile GPS apps\n- Map-based weather selection\n- Drone/IoT applications\n\n**Response:** Same as 'Get Current Weather by City' - full location and current weather object.\n\n**Error Codes:**\n- 1003: q parameter missing\n- 1006: Invalid coordinates or out of range\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Accuracy:** Returns weather for nearest weather station to coordinates."
+              }
+            },
+            {
+              "name": "Get Current Weather by IP",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q=auto:ip&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "auto:ip",
+                      "description": "Auto-detect location by IP address"
+                    },
+                    {
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
+                    }
+                  ]
+                },
+                "description": "GET Current Weather by Auto-IP Detection\n\n**Purpose:** Auto-detect user location from IP and fetch weather. Fallback when geolocation denied.\n\n**Special Parameter:** q=auto:ip (auto-detects client IP automatically)\n\n**Common Use Cases:**\n- Default weather on page load\n- Fallback when geolocation permission denied\n- Server-side personalization\n- Analytics integration\n\n**Location Accuracy:** City/region level (not street level)\n\n**Response:** Full location and current weather object.\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: q parameter missing\n- 1006: IP location lookup failed\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Privacy:** Uses only IP for location; no personal data collected."
+              }
+            },
+            {
+              "name": "Location Search",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/search.json?key={{WEATHERAPI_KEY}}&q={{SEARCH_QUERY}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["search.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "{{SEARCH_QUERY}}",
+                      "description": "Partial location name (min 2 characters)"
+                    }
+                  ]
+                },
+                "description": "GET Location Search / Autocomplete\n\n**Purpose:** Search location names for autocomplete and suggestions. Returns array of matching locations.\n\n**Requirements:** Query must be minimum 2 characters.\n\n**Response Array Fields:** id, name, region, country, lat, lon, url\n- Returns up to 10 results by default\n- Sorted by relevance/population\n\n**Example Query:** q=ber returns Berlin, Bermuda, etc.\n\n**Common Use Cases:**\n- Search box autocomplete\n- Location suggestions in UI\n- Typeahead implementation\n- Location lookup feature\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: q parameter missing (need 2+ chars)\n- 1006: No matching locations found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Setup:** Update {{SEARCH_QUERY}} with 2+ character location name."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forecast & Historical",
+          "item": [
+            {
+              "name": "Get Forecast (14 Days)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/forecast.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&days={{WEATHERAPI_DAYS}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["forecast.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country"
+                    },
+                    {
+                      "key": "days",
+                      "value": "{{WEATHERAPI_DAYS}}",
+                      "description": "Forecast days (1-14)"
+                    },
+                    {
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
+                    }
+                  ]
+                },
+                "description": "GET Weather Forecast (1-14 Days)\n\n**Purpose:** Get up to 14-day forecast with daily and hourly data.\n\n**Required Parameters:** key, q (location), days (1-14)\n\n**Response Includes:**\n- Current weather\n- Daily forecast (max/min temp, condition, precipitation)\n- Hourly forecast (24 hours per day)\n- Astronomical data (sunrise/sunset, moon phase)\n\n**Key Response Fields:**\n- day: maxtemp_c, mintemp_c, avgtemp_c, condition, precipitation, wind_kph\n- hour: time, temp_c, condition, wind_kph, humidity, will_it_rain, chance_of_rain\n- astro: sunrise, sunset, moonrise, moonset, moon_phase\n\n**Days Parameter Limits:**\n- Free Plan: max 3 days\n- Pro Plan: max 14 days\n\n**Common Use Cases:**\n- Weather dashboards\n- 7-day forecast displays\n- Trip planning\n- Agriculture apps\n\n**Error Codes:**\n- 1003: q or days parameter missing\n- 1006: Location not found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2009: Need upgrade for 14 days (free: 3 days max)\n\n**Setup:** Set {{WEATHERAPI_DAYS}} to desired range (1-3 free, 1-14 pro)."
+              }
+            },
+            {
+              "name": "Get Historical Weather by Date",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{WEATHERAPI_URL}}/history.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&dt={{HISTORICAL_DATE}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["history.json"],
+                  "query": [
+                    {
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
+                    },
+                    {
+                      "key": "q",
+                      "value": "{{CITY_NAME}}",
+                      "description": "City name or country"
+                    },
+                    {
+                      "key": "dt",
+                      "value": "{{HISTORICAL_DATE}}",
+                      "description": "Date in YYYY-MM-DD format"
+                    }
+                  ]
+                },
+                "description": "GET Historical Weather by Date\n\n**Purpose:** Retrieve actual past weather data. Available from 2010-01-01 onwards.\n\n**Date Format:** dt=YYYY-MM-DD (required) - e.g., 2024-01-15\n\n**Date Constraints:**\n- Start: 2010-01-01\n- End: Yesterday (cannot query today/future)\n- 15+ years of historical data available\n\n**Response Structure:** Same as forecast - daily + hourly data\n\n**Historical Data Available:**\n- Daily summaries (min/max/avg temp, condition)\n- Hourly breakdown (24 records per day)\n- Precipitation and snow\n- Wind speed and humidity\n- Sunrise/sunset times\n\n**Common Use Cases:**\n- Climate analysis and trends\n- Historical weather comparison\n- Research projects\n- Anniversary date lookups\n- Legal/insurance documentation\n\n**Error Codes:**\n- 1003: dt parameter missing or invalid format\n- 1006: Location not found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2009: Date range requires upgrade\n\n**Pro+ Feature:** Date range with end_dt parameter (max 30 days span)\n\n**Setup:** Update {{HISTORICAL_DATE}} with YYYY-MM-DD format."
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Weather data using WeatherAPI.com"
+    },
+    {
+      "name": "Open-Meteo",
+      "item": [
+        {
+          "name": "Get Forecast (Amsterdam)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude={{amsterdam_lat}}&longitude={{amsterdam_lon}}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{amsterdam_lat}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{amsterdam_lon}}"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,weather_code"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get current weather and 7-day forecast for Amsterdam"
+          }
+        },
+        {
+          "name": "Get Forecast (Custom Location)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "40.7128",
+                  "description": "New York latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "-74.0060",
+                  "description": "New York longitude"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,weather_code"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get weather forecast for any location (example: New York)"
+          }
+        },
+        {
+          "name": "Get Forecast (Extended)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{openmeteo_url}}/forecast?latitude={{amsterdam_lat}}&longitude={{amsterdam_lon}}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto",
+              "host": ["{{openmeteo_url}}"],
+              "path": ["forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{amsterdam_lat}}"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{amsterdam_lon}}"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Get extended forecast with humidity, wind speed, and precipitation"
+          }
+        }
+      ],
+      "description": "Weather forecast data using Open-Meteo API"
+    }
+  ]
+}
