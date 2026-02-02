@@ -6,6 +6,11 @@ import {
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
 import { isLoading } from "../state/loading.state.js";
+import {
+  saveLastWeatherState,
+  getLastWeatherState,
+  clearLastWeatherState,
+} from "../state/weather.persistence.js";
 
 const RECENT_SEARCHES_KEY = "weather_recent_searches";
 const MAX_RECENT_SEARCHES = 5;
@@ -283,6 +288,16 @@ export function renderWeatherPage(appEl) {
     `;
   }
 
+  function renderEmptyState() {
+    if (!contentEl) return;
+    contentEl.innerHTML = `
+      <div class="state-empty">
+        <h3>Search for Weather</h3>
+        <p>Search for a city or use your location.</p>
+      </div>
+    `;
+  }
+
   function renderError(error) {
     if (!contentEl) return;
     const title = error?.title || "Something went wrong";
@@ -318,6 +333,9 @@ export function renderWeatherPage(appEl) {
       case "query":
         searchWeather(lastAction.query);
         break;
+      case "coords":
+        fetchCoordsWeather(lastAction.coords?.lat, lastAction.coords?.lon);
+        break;
       case "geo":
         useGeolocation();
         break;
@@ -332,6 +350,63 @@ export function renderWeatherPage(appEl) {
   function setActionsDisabled(disabled) {
     if (searchBtn) searchBtn.disabled = disabled;
     if (locationBtn) locationBtn.disabled = disabled;
+  }
+
+  function applyUnits(units) {
+    const resolved = units === "f" ? "f" : "m";
+    currentUnits = resolved;
+    lastUnits = resolved;
+    unitsToggle.checked = resolved === "f";
+    unitsLabel.textContent = resolved === "f" ? "Fahrenheit" : "Metric";
+    localStorage.setItem("weather-units", resolved);
+  }
+
+  async function restoreLastState() {
+    if (isLoading("weather")) return;
+
+    const state = getLastWeatherState();
+    if (!state) {
+      renderEmptyState();
+      return;
+    }
+
+    applyUnits(state.units);
+    setActionsDisabled(true);
+    showLoader(contentEl);
+
+    try {
+      let data;
+      if (state.type === "query") {
+        if (searchInput) searchInput.value = state.query;
+        lastAction = { type: "query", query: state.query };
+        data = await getCurrentByQuery(state.query, { units: state.units });
+      } else if (state.type === "coords") {
+        const { lat, lon } = state.coords;
+        lastAction = { type: "coords", coords: { lat, lon } };
+        data = await getCurrentByCoords(lat, lon, { units: state.units });
+      } else {
+        lastAction = { type: "ip" };
+        data = await getCurrentByAutoIP({ units: state.units });
+      }
+
+      hideLoader();
+      renderWeatherCard(data);
+      showToast(
+        `Weather for ${data.location.name} loaded successfully`,
+        "success",
+      );
+
+      saveLastWeatherState({
+        ...state,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      hideLoader();
+      clearLastWeatherState();
+      renderEmptyState();
+    } finally {
+      setActionsDisabled(false);
+    }
   }
 
   async function searchWeather(query) {
@@ -366,6 +441,57 @@ export function renderWeatherPage(appEl) {
       );
       // Save recent search after successful fetch
       saveRecentSearch(query);
+      saveLastWeatherState({
+        type: "query",
+        query: query.trim(),
+        units: currentUnits,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      hideLoader();
+      const normalized =
+        error?.title && error?.message
+          ? error
+          : {
+              title: "Something went wrong",
+              message: "An unexpected error occurred. Please try again.",
+            };
+      showToast(normalized.title, "error");
+      renderError(normalized);
+    } finally {
+      setActionsDisabled(false);
+    }
+  }
+
+  async function fetchCoordsWeather(lat, lon) {
+    if (typeof lat !== "number" || typeof lon !== "number") return;
+
+    if (!contentEl) return;
+
+    if (isLoading("weather")) {
+      return;
+    }
+
+    setActionsDisabled(true);
+    lastAction = { type: "coords", coords: { lat, lon } };
+    lastUnits = currentUnits;
+
+    showLoader(contentEl);
+
+    try {
+      const data = await getCurrentByCoords(lat, lon, { units: currentUnits });
+      hideLoader();
+      renderWeatherCard(data);
+      showToast(
+        `Weather for ${data.location.name} loaded successfully`,
+        "success",
+      );
+      saveLastWeatherState({
+        type: "coords",
+        coords: { lat, lon },
+        units: currentUnits,
+        timestamp: Date.now(),
+      });
     } catch (error) {
       hideLoader();
       const normalized =
@@ -495,6 +621,12 @@ export function renderWeatherPage(appEl) {
             `Weather for ${data.location.name} loaded successfully`,
             "success",
           );
+          saveLastWeatherState({
+            type: "coords",
+            coords: { lat: latitude, lon: longitude },
+            units: currentUnits,
+            timestamp: Date.now(),
+          });
         } catch (error) {
           hideLoader();
           const normalized =
@@ -561,6 +693,11 @@ export function renderWeatherPage(appEl) {
         `Weather for ${data.location.name} (based on IP location) loaded successfully`,
         "success",
       );
+      saveLastWeatherState({
+        type: "ip",
+        units: currentUnits,
+        timestamp: Date.now(),
+      });
     } catch (error) {
       hideLoader();
       const normalized =
@@ -649,11 +786,6 @@ export function renderWeatherPage(appEl) {
 
   locationBtn?.addEventListener("click", useGeolocation);
 
-  // Show initial empty state
-  contentEl.innerHTML = `
-    <div class="state-empty">
-      <h3>Search for Weather</h3>
-      <p>Search for a city or use your location.</p>
-    </div>
-  `;
+  // Restore last state (once) or show empty state
+  restoreLastState();
 }
