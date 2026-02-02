@@ -158,3 +158,57 @@ export function mapPostsError(error) {
 
   return fallback;
 }
+
+/**
+ * Map REST Countries API errors
+ * @param {any} error - Error object or string
+ * @returns {{ title: string, message: string, code?: string }}
+ */
+export function mapCountriesError(error) {
+  const fallback = {
+    title: "Countries service error",
+    message: "Failed to load countries. Please try again.",
+  };
+
+  if (!error) return fallback;
+
+  if (error.title && error.message) {
+    return error;
+  }
+
+  const message =
+    typeof error === "string"
+      ? error
+      : error?.message
+        ? String(error.message)
+        : "";
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("network") ||
+    lowerMessage.includes("request failed")
+  ) {
+    return {
+      title: "Network error",
+      message:
+        "Unable to connect to countries service. Please check your internet connection.",
+    };
+  }
+
+  if (lowerMessage.includes("404") || lowerMessage.includes("not found")) {
+    return {
+      title: "Country not found",
+      message: "The requested country could not be found.",
+    };
+  }
+
+  if (lowerMessage.includes("invalid") || lowerMessage.includes("validation")) {
+    return {
+      title: "Invalid input",
+      message: "Please check your search query and try again.",
+    };
+  }
+
+  return fallback;
+}

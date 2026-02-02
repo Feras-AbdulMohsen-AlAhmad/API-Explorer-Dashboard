@@ -3,6 +3,7 @@ import {
   getCountryByName,
   getCountryByCode,
   getCountriesByRegion,
+  sortCountries,
 } from "../services/countries.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
@@ -135,6 +136,20 @@ export function renderCountriesPage(appEl) {
   let currentMode = FILTER_MODE.ALL;
   let currentSort = "name-asc";
   let debounceTimer = null;
+  let lastAction = null;
+
+  function normalizeCountriesError(error) {
+    if (error?.title && error?.message) return error;
+    return {
+      title: "Countries error",
+      message:
+        error instanceof Error ? error.message : "Failed to load countries",
+    };
+  }
+
+  function setLastAction(type, payload = {}) {
+    lastAction = { type, ...payload };
+  }
 
   // Handle tab switching
   function switchTab(mode) {
@@ -166,45 +181,23 @@ export function renderCountriesPage(appEl) {
     tab.addEventListener("click", () => switchTab(tab.dataset.mode));
   });
 
-  const sortedCountries = (countries) => {
-    const sorted = [...countries];
-    switch (currentSort) {
-      case "name-asc":
-        return sorted.sort((a, b) =>
-          a.name.common.localeCompare(b.name.common),
-        );
-      case "name-desc":
-        return sorted.sort((a, b) =>
-          b.name.common.localeCompare(a.name.common),
-        );
-      case "population-desc":
-        return sorted.sort((a, b) => (b.population || 0) - (a.population || 0));
-      case "population-asc":
-        return sorted.sort((a, b) => (a.population || 0) - (b.population || 0));
-      case "area-desc":
-        return sorted.sort((a, b) => (b.area || 0) - (a.area || 0));
-      case "area-asc":
-        return sorted.sort((a, b) => (a.area || 0) - (b.area || 0));
-      default:
-        return sorted;
-    }
-  };
+  const sortedCountries = (countries) => sortCountries(countries, currentSort);
 
   async function loadAllCountries() {
     if (!contentEl) return;
     showLoader(contentEl);
     try {
-      allCountries = (await getAllCountries()) || [];
+      setLastAction("all");
+      allCountries = (await getAllCountries({ sort: currentSort })) || [];
       displayedCountries = [...allCountries];
       hideLoader();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Loaded ${allCountries.length} countries`, "success");
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to load countries";
-      showToast(message, "error");
-      renderError(message);
+      const normalized = normalizeCountriesError(error);
+      showToast(normalized.message, "error");
+      renderError(normalized);
     }
   }
 
@@ -217,17 +210,17 @@ export function renderCountriesPage(appEl) {
 
     showLoader(contentEl);
     try {
-      const countries = await getCountryByName(query);
+      setLastAction("name", { query });
+      const countries = await getCountryByName(query, { sort: currentSort });
       displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Found ${displayedCountries.length} result(s)`, "success");
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Country not found";
-      showToast(message, "error");
-      renderError(`No results found for "${query}"`);
+      const normalized = normalizeCountriesError(error);
+      showToast(normalized.message, "error");
+      renderError(normalized);
     }
   }
 
@@ -240,23 +233,24 @@ export function renderCountriesPage(appEl) {
 
     showLoader(contentEl);
     try {
-      const countries = await getCountryByCode(code);
+      setLastAction("code", { code });
+      const countries = await getCountryByCode(code, { sort: currentSort });
       displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
       renderCountries(sortedCountries(displayedCountries));
       showToast(`Found country with code "${code}"`, "success");
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Country code not found";
-      showToast(message, "error");
-      renderError(`No country found with code "${code}"`);
+      const normalized = normalizeCountriesError(error);
+      showToast(normalized.message, "error");
+      renderError(normalized);
     }
   }
 
   async function filterByRegion() {
     const region = regionSelect?.value;
     if (!region || region === "all") {
+      setLastAction("all");
       displayedCountries = [...allCountries];
       renderCountries(sortedCountries(displayedCountries));
       return;
@@ -264,7 +258,10 @@ export function renderCountriesPage(appEl) {
 
     showLoader(contentEl);
     try {
-      const countries = await getCountriesByRegion(region);
+      setLastAction("region", { region });
+      const countries = await getCountriesByRegion(region, {
+        sort: currentSort,
+      });
       displayedCountries = countries || [];
       hideLoader();
       renderCountries(sortedCountries(displayedCountries));
@@ -274,17 +271,16 @@ export function renderCountriesPage(appEl) {
       );
     } catch (error) {
       hideLoader();
-      const message =
-        error instanceof Error ? error.message : "Failed to filter countries";
-      showToast(message, "error");
-      renderError(`Failed to load countries in ${region}`);
+      const normalized = normalizeCountriesError(error);
+      showToast(normalized.message, "error");
+      renderError(normalized);
     }
   }
 
   function renderCountries(countries) {
     if (!countries.length) {
       contentEl.innerHTML = `
-        <div class="empty-state">
+        <div class="state-empty">
           <h3>No countries found</h3>
           <p>Try adjusting your search or filter criteria.</p>
         </div>
@@ -347,12 +343,13 @@ export function renderCountriesPage(appEl) {
     });
   }
 
-  function renderError(message) {
+  function renderError(error) {
     if (!contentEl) return;
+    const normalized = normalizeCountriesError(error);
     contentEl.innerHTML = `
-      <div class="error-state">
-        <h3>Failed to Load Countries</h3>
-        <p>${message}</p>
+      <div class="state-error">
+        <h3>${normalized.title || "Failed to load countries"}</h3>
+        <p>${normalized.message}</p>
         <button class="btn btn-primary" id="retry-btn">Retry</button>
       </div>
     `;
@@ -360,8 +357,27 @@ export function renderCountriesPage(appEl) {
     const retryBtn = contentEl.querySelector("#retry-btn");
     if (retryBtn) {
       retryBtn.addEventListener("click", () => {
-        if (currentMode === FILTER_MODE.ALL) {
+        if (!lastAction) {
           loadAllCountries();
+          return;
+        }
+
+        switch (lastAction.type) {
+          case "name":
+            searchNameInput.value = lastAction.query || "";
+            searchByName();
+            break;
+          case "code":
+            searchCodeInput.value = lastAction.code || "";
+            searchByCode();
+            break;
+          case "region":
+            regionSelect.value = lastAction.region || "all";
+            filterByRegion();
+            break;
+          default:
+            loadAllCountries();
+            break;
         }
       });
     }
