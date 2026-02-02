@@ -32,7 +32,9 @@
 }
 
 .empty-state,
-.error-state {
+.error-state,
+.state-empty,
+.state-error {
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-5);
@@ -41,18 +43,23 @@
   background: rgba(226, 232, 240, 0.25);
 }
 
-.error-state {
+.error-state,
+.state-error {
   color: var(--color-danger);
   border-color: rgba(239, 68, 68, 0.35);
   background: rgba(239, 68, 68, 0.05);
 }
 
 .empty-state h3,
-.error-state h3 {
+.error-state h3,
+.state-empty h3,
+.state-error h3 {
   margin-bottom: var(--space-3);
 }
 
 .empty-state p,
-.error-state p {
+.error-state p,
+.state-empty p,
+.state-error p {
   color: var(--color-muted);
 }

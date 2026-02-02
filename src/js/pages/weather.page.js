@@ -141,6 +141,10 @@ export function renderWeatherPage(appEl) {
                 type="text"
                 placeholder="e.g., Amsterdam, NL"
                 aria-label="Search for weather by city or country"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="weather-suggestions"
+                aria-expanded="false"
                 autocomplete="off"
                 style="width: 100%;"
               />
@@ -317,7 +321,7 @@ export function renderWeatherPage(appEl) {
   function renderEmptyState() {
     if (!contentEl) return;
     contentEl.innerHTML = `
-      <div class="state-empty">
+      <div class="state-empty" role="status" aria-live="polite">
         <h3>Search for Weather</h3>
         <p>Search for a city or use your location.</p>
       </div>
@@ -329,7 +333,7 @@ export function renderWeatherPage(appEl) {
     const normalized = normalizeError(error);
     const { title, message } = normalized;
     contentEl.innerHTML = `
-      <div class="state-error">
+      <div class="state-error" role="alert" aria-live="assertive">
         <h3>${title}</h3>
         <p>${message}</p>
         <div class="actions" style="justify-content: center; margin-top: var(--space-4);">
@@ -534,6 +538,9 @@ export function renderWeatherPage(appEl) {
     if (suggestionsContainer) {
       suggestionsContainer.hidden = false;
     }
+    if (searchInput) {
+      searchInput.setAttribute("aria-expanded", "true");
+    }
   }
 
   function closeSuggestions() {
@@ -543,6 +550,10 @@ export function renderWeatherPage(appEl) {
     }
     suggestions = [];
     activeSuggestionIndex = -1;
+    if (searchInput) {
+      searchInput.setAttribute("aria-expanded", "false");
+      searchInput.removeAttribute("aria-activedescendant");
+    }
   }
 
   function renderSuggestions(items) {
@@ -550,7 +561,7 @@ export function renderWeatherPage(appEl) {
 
     if (!items || items.length === 0) {
       suggestionsContainer.innerHTML =
-        '<div class="suggestion-empty">No suggestions</div>';
+        '<div class="suggestion-empty" role="status">No suggestions</div>';
       openSuggestions();
       return;
     }
@@ -559,9 +570,13 @@ export function renderWeatherPage(appEl) {
       .map((item, idx) => {
         const activeClass =
           idx === activeSuggestionIndex ? "suggestion-item--active" : "";
+        const optionId = `weather-suggestion-${idx}`;
         return `
           <div
             data-index="${idx}"
+            id="${optionId}"
+            role="option"
+            aria-selected="${idx === activeSuggestionIndex}"
             class="suggestion-item ${activeClass}"
           >
             ${item}
@@ -570,6 +585,12 @@ export function renderWeatherPage(appEl) {
       })
       .join("");
 
+    if (searchInput && activeSuggestionIndex >= 0) {
+      searchInput.setAttribute(
+        "aria-activedescendant",
+        `weather-suggestion-${activeSuggestionIndex}`,
+      );
+    }
     openSuggestions();
   }
 

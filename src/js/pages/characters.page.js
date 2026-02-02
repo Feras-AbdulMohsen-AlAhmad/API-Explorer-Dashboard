@@ -107,7 +107,7 @@ export function renderCharactersPage(appEl) {
   function renderCharacters(list) {
     if (!list || list.length === 0) {
       contentEl.innerHTML = `
-				<div class="state-empty">
+        <div class="state-empty" role="status" aria-live="polite">
 					<h3>No characters found</h3>
 					<p>Try adjusting filters or pagination.</p>
 				</div>
@@ -169,7 +169,7 @@ export function renderCharactersPage(appEl) {
 
   function renderError(message) {
     contentEl.innerHTML = `
-			<div class="state-error">
+      <div class="state-error" role="alert" aria-live="assertive">
 				<h3>Unable to load characters</h3>
 				<p>${escapeHtml(message)}</p>
 				<div class="actions" style="justify-content: center; margin-top: var(--space-4);">

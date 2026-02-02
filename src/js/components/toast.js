@@ -8,6 +8,8 @@ function ensureContainer() {
   const container = document.createElement("div");
   container.className = TOAST_CONTAINER_CLASS;
   container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-atomic", "true");
   document.body.appendChild(container);
   toastContainer = container;
   return container;

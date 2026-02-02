@@ -98,7 +98,7 @@ export function renderPostsPage(appEl) {
   function renderPosts(posts) {
     if (!posts.length) {
       contentEl.innerHTML = `
-        <div class="state-empty">
+        <div class="state-empty" role="status" aria-live="polite">
           <h3>${currentTerm ? "No matches found" : "No posts available"}</h3>
           <p>${currentTerm ? "Try a different search." : "Try again later."}</p>
         </div>
@@ -132,7 +132,7 @@ export function renderPostsPage(appEl) {
 
   function renderError(error) {
     contentEl.innerHTML = `
-      <div class="state-error">
+      <div class="state-error" role="alert" aria-live="assertive">
         <h3>${escapeHtml(error.title || "Unable to load posts")}</h3>
         <p>${escapeHtml(error.message || "An unexpected error occurred.")}</p>
         <div class="actions" style="justify-content: center; margin-top: var(--space-4);">

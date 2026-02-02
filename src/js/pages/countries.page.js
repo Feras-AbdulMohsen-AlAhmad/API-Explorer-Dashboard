@@ -42,17 +42,17 @@ export function renderCountriesPage(appEl) {
       </div>
 
       <!-- Filter Tabs -->
-      <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 2px solid var(--color-border); padding-bottom: var(--space-2);">
-        <button class="filter-tab active" data-mode="${FILTER_MODE.ALL}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+      <div role="tablist" aria-label="Country filters" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 2px solid var(--color-border); padding-bottom: var(--space-2);">
+        <button class="filter-tab active" role="tab" aria-selected="true" tabindex="0" data-mode="${FILTER_MODE.ALL}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
           All Countries
         </button>
-        <button class="filter-tab" data-mode="${FILTER_MODE.NAME}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+        <button class="filter-tab" role="tab" aria-selected="false" tabindex="-1" data-mode="${FILTER_MODE.NAME}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
           Search by Name
         </button>
-        <button class="filter-tab" data-mode="${FILTER_MODE.CODE}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+        <button class="filter-tab" role="tab" aria-selected="false" tabindex="-1" data-mode="${FILTER_MODE.CODE}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
           Search by Code
         </button>
-        <button class="filter-tab" data-mode="${FILTER_MODE.REGION}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+        <button class="filter-tab" role="tab" aria-selected="false" tabindex="-1" data-mode="${FILTER_MODE.REGION}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
           Filter by Region
         </button>
       </div>
@@ -92,7 +92,7 @@ export function renderCountriesPage(appEl) {
 
         <!-- Filter by Region Panel -->
         <div class="filter-panel" data-panel="${FILTER_MODE.REGION}" style="display: none;">
-          <select id="region-select" class="input" style="width: 100%; max-width: 400px;">
+          <select id="region-select" class="input" aria-label="Filter countries by region" style="width: 100%; max-width: 400px;">
             ${REGIONS.map((r) => `<option value="${r.value}">${r.label}</option>`).join("")}
           </select>
         </div>
@@ -169,6 +169,8 @@ export function renderCountriesPage(appEl) {
         ? "var(--color-primary)"
         : "transparent";
       tab.style.color = isActive ? "var(--color-primary)" : "";
+      tab.setAttribute("aria-selected", isActive ? "true" : "false");
+      tab.setAttribute("tabindex", isActive ? "0" : "-1");
     });
 
     // Show/hide filter panels
@@ -185,6 +187,12 @@ export function renderCountriesPage(appEl) {
   // Attach tab listeners
   filterTabs.forEach((tab) => {
     tab.addEventListener("click", () => switchTab(tab.dataset.mode));
+    tab.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        switchTab(tab.dataset.mode);
+      }
+    });
   });
 
   const sortedCountries = (countries) => sortCountries(countries, currentSort);
@@ -291,7 +299,7 @@ export function renderCountriesPage(appEl) {
   function renderCountries(countries) {
     if (!countries.length) {
       contentEl.innerHTML = `
-        <div class="state-empty">
+        <div class="state-empty" role="status" aria-live="polite">
           <h3>No countries found</h3>
           <p>Try adjusting your search or filter criteria.</p>
         </div>
@@ -305,7 +313,7 @@ export function renderCountriesPage(appEl) {
     const cardsHtml = visibleCountries
       .map(
         (country, index) => `
-        <div class="card country-card" data-index="${index}" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
+        <div class="card country-card" data-index="${index}" role="button" tabindex="0" aria-haspopup="dialog" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
           <div style="display: flex; gap: var(--space-4); align-items: flex-start;">
             <img
               src="${country.flags?.png || ""}"
@@ -361,6 +369,15 @@ export function renderCountriesPage(appEl) {
           showCountryDetails(visibleCountries[index]);
         }
       });
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          const index = parseInt(card.dataset.index, 10);
+          if (!isNaN(index) && visibleCountries[index]) {
+            showCountryDetails(visibleCountries[index]);
+          }
+        }
+      });
     });
 
     const loadMoreBtn = contentEl.querySelector("#load-more-countries");
@@ -374,7 +391,7 @@ export function renderCountriesPage(appEl) {
     if (!contentEl) return;
     const normalized = normalizeCountriesError(error);
     contentEl.innerHTML = `
-      <div class="state-error">
+      <div class="state-error" role="alert" aria-live="assertive">
         <h3>${normalized.title || "Failed to load countries"}</h3>
         <p>${normalized.message}</p>
         <button class="btn btn-primary" id="retry-btn">Retry</button>

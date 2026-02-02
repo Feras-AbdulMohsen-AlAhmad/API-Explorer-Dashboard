@@ -25,12 +25,14 @@ export function showLoader(targetEl = document.body) {
   hideLoader();
   const loader = buildLoader();
   const host = targetEl;
+  host.setAttribute("aria-busy", "true");
   host.appendChild(loader);
   activeLoader = loader;
 }
 
 export function hideLoader() {
   if (activeLoader && activeLoader.parentElement) {
+    activeLoader.parentElement.setAttribute("aria-busy", "false");
     activeLoader.parentElement.removeChild(activeLoader);
   }
   activeLoader = null;
