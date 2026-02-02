@@ -3,7 +3,7 @@ export const ENDPOINTS = {
   RICK_AND_MORTY: "https://rickandmortyapi.com/api",
   REST_COUNTRIES: "https://restcountries.com/v3.1",
   OPEN_METEO: "https://api.open-meteo.com/v1",
-  WEATHERSTACK: "https://api.weatherstack.com",
+  WEATHER_API: "https://api.weatherapi.com/v1",
 };
 
 export function buildUrl(base, path = "") {

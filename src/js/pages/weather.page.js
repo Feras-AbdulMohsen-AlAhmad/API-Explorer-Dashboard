@@ -112,7 +112,7 @@ export function renderWeatherPage(appEl) {
       <div class="page-header">
         <div>
           <h1>Weather</h1>
-          <p style="color: var(--color-muted);">Check current weather conditions worldwide using Weatherstack API.</p>
+          <p style="color: var(--color-muted);">Check current weather conditions worldwide using WeatherAPI.com.</p>
         </div>
       </div>
       <div class="section-block">

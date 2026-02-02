@@ -35,7 +35,11 @@ export function mapWeatherError(error) {
   const lowerMessage = message.toLowerCase();
 
   // Configuration errors (API key issues)
-  if (info.includes("access key") || lowerMessage.includes("access key")) {
+  if (
+    info.includes("access key") ||
+    lowerMessage.includes("access key") ||
+    ["1002", "2006", "2007", "2008"].includes(code)
+  ) {
     return {
       title: "Configuration error",
       message:
@@ -45,7 +49,7 @@ export function mapWeatherError(error) {
   }
 
   // Rate limit / usage limit
-  const limitCodes = new Set(["104", "105", "429"]);
+  const limitCodes = new Set(["104", "105", "429", "2007"]);
   if (
     (code && limitCodes.has(code)) ||
     info.includes("rate limit") ||
@@ -64,7 +68,8 @@ export function mapWeatherError(error) {
   if (
     info.includes("location") ||
     lowerMessage.includes("location") ||
-    lowerMessage.includes("no_data")
+    lowerMessage.includes("no_data") ||
+    code === "1006"
   ) {
     return {
       title: "Location not found",
@@ -76,7 +81,8 @@ export function mapWeatherError(error) {
   // Input validation errors
   if (
     lowerMessage.includes("query_required") ||
-    lowerMessage.includes("invalid_coords")
+    lowerMessage.includes("invalid_coords") ||
+    code === "1003"
   ) {
     return {
       title: "Invalid input",

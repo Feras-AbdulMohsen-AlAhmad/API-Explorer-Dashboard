@@ -29,7 +29,7 @@ export async function loadConfig() {
     } catch (fallbackError) {
       // If both fail, use placeholder
       loadedConfig = {
-        WEATHERSTACK_ACCESS_KEY: "YOUR_KEY_HERE",
+        WEATHER_API_KEY: "YOUR_KEY_HERE",
       };
       console.error("✗ Failed to load config files, using placeholder");
     }
@@ -59,6 +59,6 @@ export function getConfig() {
 export function isConfigValid() {
   if (!loadedConfig) return false;
 
-  const key = loadedConfig.WEATHERSTACK_ACCESS_KEY;
+  const key = loadedConfig.WEATHER_API_KEY;
   return key && key !== "YOUR_KEY_HERE" && key !== "PLACEHOLDER_KEY_REPLACE_ME";
 }

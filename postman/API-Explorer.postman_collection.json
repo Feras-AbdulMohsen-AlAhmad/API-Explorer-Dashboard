@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "API Explorer Dashboard",
-    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, Weatherstack, and Open-Meteo APIs",
+    "description": "Collection for Multi-API Explorer Dashboard project featuring JSONPlaceholder, Rick & Morty, REST Countries, WeatherAPI.com, and Open-Meteo APIs",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -331,7 +331,7 @@
       "description": "Country data retrieval using REST Countries API"
     },
     {
-      "name": "Weatherstack",
+      "name": "WeatherAPI.com",
       "item": [
         {
           "name": "Current Weather",
@@ -342,33 +342,28 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["current"],
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
+                      "key": "q",
                       "value": "{{CITY_NAME}}",
                       "description": "City name or country (e.g., Berlin, Tokyo)"
                     },
                     {
-                      "key": "units",
-                      "value": "{{WEATHERSTACK_UNITS}}",
-                      "description": "Units: m (metric), f (Fahrenheit), s (scientific)"
-                    },
-                    {
-                      "key": "language",
-                      "value": "{{WEATHERSTACK_LANGUAGE}}",
-                      "description": "Language code (e.g., en, es, fr)"
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
                     }
                   ]
                 },
-                "description": "Fetch current weather for a city or country.\n\nExpected fields: location.name, location.country, location.localtime, current.temperature, current.weather_descriptions, current.humidity, current.wind_speed, current.pressure, current.feelslike."
+                "description": "Fetch current weather for a city or country.\n\nExpected fields: location.name, location.country, location.localtime, current.temp_c, current.temp_f, current.condition.text, current.condition.icon, current.humidity, current.wind_kph, current.pressure_mb."
               }
             }
           ]
@@ -382,29 +377,24 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query={{LATITUDE}},{{LONGITUDE}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["current"],
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q={{LATITUDE}},{{LONGITUDE}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
+                      "key": "q",
                       "value": "{{LATITUDE}},{{LONGITUDE}}",
                       "description": "Latitude,Longitude (e.g., 52.52,13.405)"
                     },
                     {
-                      "key": "units",
-                      "value": "{{WEATHERSTACK_UNITS}}",
-                      "description": "Units: m, f, s"
-                    },
-                    {
-                      "key": "language",
-                      "value": "{{WEATHERSTACK_LANGUAGE}}",
-                      "description": "Language code"
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
                     }
                   ]
                 },
@@ -417,29 +407,24 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/current?access_key={{WEATHERSTACK_API_KEY}}&query=fetch:ip&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["current"],
+                  "raw": "{{WEATHERAPI_URL}}/current.json?key={{WEATHERAPI_KEY}}&q=auto:ip&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["current.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
-                      "value": "fetch:ip",
+                      "key": "q",
+                      "value": "auto:ip",
                       "description": "Auto-detect location by IP address"
                     },
                     {
-                      "key": "units",
-                      "value": "{{WEATHERSTACK_UNITS}}",
-                      "description": "Units: m, f, s"
-                    },
-                    {
-                      "key": "language",
-                      "value": "{{WEATHERSTACK_LANGUAGE}}",
-                      "description": "Language code"
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
                     }
                   ]
                 },
@@ -447,73 +432,68 @@
               }
             },
             {
-              "name": "Autocomplete Location",
+              "name": "Location Search",
               "request": {
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/autocomplete?access_key={{WEATHERSTACK_API_KEY}}&query={{SEARCH_QUERY}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["autocomplete"],
+                  "raw": "{{WEATHERAPI_URL}}/search.json?key={{WEATHERAPI_KEY}}&q={{SEARCH_QUERY}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["search.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
+                      "key": "q",
                       "value": "{{SEARCH_QUERY}}",
                       "description": "Partial location name (min 2 characters)"
                     }
                   ]
                 },
-                "description": "Autocomplete location search (paid plan). Returns matching locations with name, country, lat, lon."
+                "description": "Search for locations. Returns matching locations with name, country, latitude, longitude, and timezone. Limit is 10 by default."
               }
             }
           ]
         },
         {
-          "name": "Forecast / Historical",
+          "name": "Forecast & Historical",
           "item": [
             {
-              "name": "Get Forecast (7 Days)",
+              "name": "Get Forecast (14 Days)",
               "request": {
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/forecast?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&forecast_days=7&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["forecast"],
+                  "raw": "{{WEATHERAPI_URL}}/forecast.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&days={{WEATHERAPI_DAYS}}&aqi={{WEATHERAPI_AQI}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["forecast.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
+                      "key": "q",
                       "value": "{{CITY_NAME}}",
                       "description": "City name or country"
                     },
                     {
-                      "key": "forecast_days",
-                      "value": "7",
+                      "key": "days",
+                      "value": "{{WEATHERAPI_DAYS}}",
                       "description": "Forecast days (1-14)"
                     },
                     {
-                      "key": "units",
-                      "value": "{{WEATHERSTACK_UNITS}}",
-                      "description": "Units: m, f, s"
-                    },
-                    {
-                      "key": "language",
-                      "value": "{{WEATHERSTACK_LANGUAGE}}",
-                      "description": "Language code"
+                      "key": "aqi",
+                      "value": "{{WEATHERAPI_AQI}}",
+                      "description": "Air Quality Index (yes/no)"
                     }
                   ]
                 },
-                "description": "7-day forecast (paid plan). Returns forecast object with daily summaries."
+                "description": "Get 14-day forecast. Returns current, forecast, and alerts with daily and hourly data."
               }
             },
             {
@@ -522,44 +502,34 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{WEATHERSTACK_URL}}/historical?access_key={{WEATHERSTACK_API_KEY}}&query={{CITY_NAME}}&historical_date={{HISTORICAL_DATE}}&units={{WEATHERSTACK_UNITS}}&language={{WEATHERSTACK_LANGUAGE}}",
-                  "host": ["{{WEATHERSTACK_URL}}"],
-                  "path": ["historical"],
+                  "raw": "{{WEATHERAPI_URL}}/history.json?key={{WEATHERAPI_KEY}}&q={{CITY_NAME}}&dt={{HISTORICAL_DATE}}",
+                  "host": ["{{WEATHERAPI_URL}}"],
+                  "path": ["history.json"],
                   "query": [
                     {
-                      "key": "access_key",
-                      "value": "{{WEATHERSTACK_API_KEY}}",
-                      "description": "Weatherstack API access key"
+                      "key": "key",
+                      "value": "{{WEATHERAPI_KEY}}",
+                      "description": "WeatherAPI.com API key"
                     },
                     {
-                      "key": "query",
+                      "key": "q",
                       "value": "{{CITY_NAME}}",
                       "description": "City name or country"
                     },
                     {
-                      "key": "historical_date",
+                      "key": "dt",
                       "value": "{{HISTORICAL_DATE}}",
                       "description": "Date in YYYY-MM-DD format"
-                    },
-                    {
-                      "key": "units",
-                      "value": "{{WEATHERSTACK_UNITS}}",
-                      "description": "Units: m, f, s"
-                    },
-                    {
-                      "key": "language",
-                      "value": "{{WEATHERSTACK_LANGUAGE}}",
-                      "description": "Language code"
                     }
                   ]
                 },
-                "description": "Historical weather for a specific date (paid plan). Returns historical object keyed by date."
+                "description": "Get historical weather for a specific date (up to 10 years ago). Returns historical object keyed by date."
               }
             }
           ]
         }
       ],
-      "description": "Weather data using Weatherstack API"
+      "description": "Weather data using WeatherAPI.com"
     },
     {
       "name": "Open-Meteo",

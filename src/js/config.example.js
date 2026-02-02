@@ -9,8 +9,8 @@
 // 3. Replace "YOUR_KEY_HERE" with your actual API key
 // 4. Save and the app will automatically use it
 
-// Weatherstack API Configuration
-// Get your free API key at: https://weatherstack.com/
+// WeatherAPI.com Configuration
+// Get your free API key at: https://www.weatherapi.com/
 export const CONFIG = {
-  WEATHERSTACK_ACCESS_KEY: "YOUR_KEY_HERE",
+  WEATHER_API_KEY: "YOUR_KEY_HERE",
 };

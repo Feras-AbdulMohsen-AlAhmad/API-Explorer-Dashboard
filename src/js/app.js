@@ -13,13 +13,13 @@ async function bootstrap() {
     // Validate config and show warning if using placeholder
     if (!isConfigValid()) {
       showToast(
-        "Weather API key not configured. Create src/js/config.local.js with your Weatherstack key.",
+        "Weather API key not configured. Create src/js/config.local.js with your WeatherAPI.com key.",
         "error",
       );
       console.error(
-        "⚠ Weather feature unavailable: Missing valid WEATHERSTACK_ACCESS_KEY.\n" +
+        "⚠ Weather feature unavailable: Missing valid WEATHER_API_KEY.\n" +
           "→ Create src/js/config.local.js with:\n" +
-          '  export const CONFIG = { WEATHERSTACK_ACCESS_KEY: "your_key_here" };',
+          '  export const CONFIG = { WEATHER_API_KEY: "your_key_here" };',
       );
     }
   } catch (error) {
