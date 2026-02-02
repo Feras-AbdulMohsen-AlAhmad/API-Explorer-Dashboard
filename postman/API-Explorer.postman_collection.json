@@ -363,7 +363,7 @@
                     }
                   ]
                 },
-                "description": "Fetch current weather for a city or country.\n\nExpected fields: location.name, location.country, location.localtime, current.temp_c, current.temp_f, current.condition.text, current.condition.icon, current.humidity, current.wind_kph, current.pressure_mb."
+                "description": "GET Current Weather by City\n\n**Purpose:** Fetch real-time weather data for a specified city or country.\n\n**Required Parameters:** key (API key), q (city/country name)\n\n**Response Fields:**\n- location: { name, country, region, lat, lon, tz_id, localtime }\n- current: { last_updated, temp_c, temp_f, is_day, condition: { text, icon, code }, humidity, wind_kph, wind_degree, pressure_mb, precip_mm, feelslike_c, vis_km, uv, gust_kph }\n\n**Common Fields to Display:**\n- current.temp_c or current.temp_f (temperature)\n- current.condition.text (weather description)\n- current.condition.icon (weather icon URL)\n- current.humidity (%)\n- current.wind_kph (wind speed)\n- current.feelslike_c (feels like temperature)\n- location.localtime (local time)\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: Parameter q not provided\n- 1006: No location found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2008: API key disabled\n\n**Rate Limits:** Free 1M/month, Pro 10M/month, Business 100M/month\n\n**Setup:** Replace {{WEATHERAPI_KEY}} with key from https://www.weatherapi.com/"
               }
             }
           ]
@@ -398,7 +398,7 @@
                     }
                   ]
                 },
-                "description": "Fetch current weather using coordinates (lat, lon). Useful for geolocation-based weather."
+                "description": "GET Current Weather by Coordinates\n\n**Purpose:** Fetch weather for GPS/map coordinates. Perfect for geolocation apps and mobile weather.\n\n**Query Format:** q={{LATITUDE}},{{LONGITUDE}} (e.g., 40.7128,-74.0060)\n\n**Coordinate Ranges:** Lat -90 to +90, Lon -180 to +180\n\n**Common Use Cases:**\n- Browser geolocation integration\n- Mobile GPS apps\n- Map-based weather selection\n- Drone/IoT applications\n\n**Response:** Same as 'Get Current Weather by City' - full location and current weather object.\n\n**Error Codes:**\n- 1003: q parameter missing\n- 1006: Invalid coordinates or out of range\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Accuracy:** Returns weather for nearest weather station to coordinates."
               }
             },
             {
@@ -428,7 +428,7 @@
                     }
                   ]
                 },
-                "description": "Auto-detect user location by IP address. Useful as a fallback when geolocation is denied."
+                "description": "GET Current Weather by Auto-IP Detection\n\n**Purpose:** Auto-detect user location from IP and fetch weather. Fallback when geolocation denied.\n\n**Special Parameter:** q=auto:ip (auto-detects client IP automatically)\n\n**Common Use Cases:**\n- Default weather on page load\n- Fallback when geolocation permission denied\n- Server-side personalization\n- Analytics integration\n\n**Location Accuracy:** City/region level (not street level)\n\n**Response:** Full location and current weather object.\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: q parameter missing\n- 1006: IP location lookup failed\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Privacy:** Uses only IP for location; no personal data collected."
               }
             },
             {
@@ -453,7 +453,7 @@
                     }
                   ]
                 },
-                "description": "Search for locations. Returns matching locations with name, country, latitude, longitude, and timezone. Limit is 10 by default."
+                "description": "GET Location Search / Autocomplete\n\n**Purpose:** Search location names for autocomplete and suggestions. Returns array of matching locations.\n\n**Requirements:** Query must be minimum 2 characters.\n\n**Response Array Fields:** id, name, region, country, lat, lon, url\n- Returns up to 10 results by default\n- Sorted by relevance/population\n\n**Example Query:** q=ber returns Berlin, Bermuda, etc.\n\n**Common Use Cases:**\n- Search box autocomplete\n- Location suggestions in UI\n- Typeahead implementation\n- Location lookup feature\n\n**Error Codes:**\n- 1002: API key not provided\n- 1003: q parameter missing (need 2+ chars)\n- 1006: No matching locations found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n\n**Setup:** Update {{SEARCH_QUERY}} with 2+ character location name."
               }
             }
           ]
@@ -493,7 +493,7 @@
                     }
                   ]
                 },
-                "description": "Get 14-day forecast. Returns current, forecast, and alerts with daily and hourly data."
+                "description": "GET Weather Forecast (1-14 Days)\n\n**Purpose:** Get up to 14-day forecast with daily and hourly data.\n\n**Required Parameters:** key, q (location), days (1-14)\n\n**Response Includes:**\n- Current weather\n- Daily forecast (max/min temp, condition, precipitation)\n- Hourly forecast (24 hours per day)\n- Astronomical data (sunrise/sunset, moon phase)\n\n**Key Response Fields:**\n- day: maxtemp_c, mintemp_c, avgtemp_c, condition, precipitation, wind_kph\n- hour: time, temp_c, condition, wind_kph, humidity, will_it_rain, chance_of_rain\n- astro: sunrise, sunset, moonrise, moonset, moon_phase\n\n**Days Parameter Limits:**\n- Free Plan: max 3 days\n- Pro Plan: max 14 days\n\n**Common Use Cases:**\n- Weather dashboards\n- 7-day forecast displays\n- Trip planning\n- Agriculture apps\n\n**Error Codes:**\n- 1003: q or days parameter missing\n- 1006: Location not found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2009: Need upgrade for 14 days (free: 3 days max)\n\n**Setup:** Set {{WEATHERAPI_DAYS}} to desired range (1-3 free, 1-14 pro)."
               }
             },
             {
@@ -523,7 +523,7 @@
                     }
                   ]
                 },
-                "description": "Get historical weather for a specific date (up to 10 years ago). Returns historical object keyed by date."
+                "description": "GET Historical Weather by Date\n\n**Purpose:** Retrieve actual past weather data. Available from 2010-01-01 onwards.\n\n**Date Format:** dt=YYYY-MM-DD (required) - e.g., 2024-01-15\n\n**Date Constraints:**\n- Start: 2010-01-01\n- End: Yesterday (cannot query today/future)\n- 15+ years of historical data available\n\n**Response Structure:** Same as forecast - daily + hourly data\n\n**Historical Data Available:**\n- Daily summaries (min/max/avg temp, condition)\n- Hourly breakdown (24 records per day)\n- Precipitation and snow\n- Wind speed and humidity\n- Sunrise/sunset times\n\n**Common Use Cases:**\n- Climate analysis and trends\n- Historical weather comparison\n- Research projects\n- Anniversary date lookups\n- Legal/insurance documentation\n\n**Error Codes:**\n- 1003: dt parameter missing or invalid format\n- 1006: Location not found\n- 2006: Invalid API key\n- 2007: API quota exceeded\n- 2009: Date range requires upgrade\n\n**Pro+ Feature:** Date range with end_dt parameter (max 30 days span)\n\n**Setup:** Update {{HISTORICAL_DATE}} with YYYY-MM-DD format."
               }
             }
           ]
