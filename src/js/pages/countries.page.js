@@ -6,10 +6,27 @@ import {
 } from "../services/countries.service.js";
 import { showLoader, hideLoader } from "../components/loader.js";
 import { showToast } from "../components/toast.js";
-import { openModal, closeModal } from "../components/modal.js";
+import { openModal } from "../components/modal.js";
 
 const DEBOUNCE_MS = 300;
-const REGIONS = ["Africa", "Americas", "Asia", "Europe", "Oceania"];
+
+// Available Regions
+const REGIONS = [
+  { value: "all", label: "All Regions" },
+  { value: "africa", label: "Africa" },
+  { value: "americas", label: "Americas" },
+  { value: "asia", label: "Asia" },
+  { value: "europe", label: "Europe" },
+  { value: "oceania", label: "Oceania" },
+];
+
+// Filter modes
+const FILTER_MODE = {
+  ALL: "all",
+  NAME: "name",
+  CODE: "code",
+  REGION: "region",
+};
 
 export function renderCountriesPage(appEl) {
   if (!appEl) return;
@@ -18,238 +35,258 @@ export function renderCountriesPage(appEl) {
     <section class="page">
       <div class="page-header">
         <div>
-          <h1>Countries</h1>
-          <p style="color: var(--color-muted);">Explore countries worldwide with REST Countries API.</p>
+          <h1>Countries Explorer</h1>
+          <p style="color: var(--color-muted);">Explore countries worldwide with REST Countries API - All endpoints included</p>
         </div>
-        <div class="actions" style="gap: var(--space-3); display: flex; flex-wrap: wrap; align-items: center;">
-          <select id="countries-sort" class="input" style="width: auto; min-width: 180px;">
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="population-desc">Population (High to Low)</option>
-            <option value="population-asc">Population (Low to High)</option>
-          </select>
-          
-          <select id="countries-filter-type" class="input" style="width: auto; min-width: 150px;">
-            <option value="all">All Countries</option>
-            <option value="name">Search by Name</option>
-            <option value="code">Search by Code</option>
-            <option value="region">Filter by Region</option>
-          </select>
+      </div>
 
-          <div id="countries-filter-inputs" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+      <!-- Filter Tabs -->
+      <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 2px solid var(--color-border); padding-bottom: var(--space-2);">
+        <button class="filter-tab active" data-mode="${FILTER_MODE.ALL}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+          All Countries
+        </button>
+        <button class="filter-tab" data-mode="${FILTER_MODE.NAME}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+          Search by Name
+        </button>
+        <button class="filter-tab" data-mode="${FILTER_MODE.CODE}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+          Search by Code
+        </button>
+        <button class="filter-tab" data-mode="${FILTER_MODE.REGION}" style="padding: var(--space-2) var(--space-3); border: none; background: transparent; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+          Filter by Region
+        </button>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="page-header" style="margin-bottom: var(--space-4);">
+        <!-- Search by Name Panel -->
+        <div class="filter-panel" data-panel="${FILTER_MODE.NAME}" style="display: none;">
+          <div style="display: flex; gap: var(--space-2); align-items: center;">
             <input
-              id="countries-search"
+              id="search-name-input"
               class="input"
               type="search"
-              placeholder="Search by name..."
-              aria-label="Search countries by name"
-              style="width: min(280px, 100%);"
+              placeholder="Search by country name (e.g., Netherlands, Japan)..."
+              aria-label="Search by country name"
+              style="flex: 1;"
             />
+            <button id="search-name-btn" class="btn btn-primary">Search</button>
           </div>
         </div>
+
+        <!-- Search by Code Panel -->
+        <div class="filter-panel" data-panel="${FILTER_MODE.CODE}" style="display: none;">
+          <div style="display: flex; gap: var(--space-2); align-items: center;">
+            <input
+              id="search-code-input"
+              class="input"
+              type="search"
+              placeholder="Enter country code (e.g., NL, US, JP)..."
+              aria-label="Search by country code"
+              maxlength="3"
+              style="flex: 1;"
+            />
+            <button id="search-code-btn" class="btn btn-primary">Search</button>
+          </div>
+        </div>
+
+        <!-- Filter by Region Panel -->
+        <div class="filter-panel" data-panel="${FILTER_MODE.REGION}" style="display: none;">
+          <select id="region-select" class="input" style="width: 100%; max-width: 400px;">
+            ${REGIONS.map((r) => `<option value="${r.value}">${r.label}</option>`).join("")}
+          </select>
+        </div>
+
+        <!-- Sort Controls (Always Visible) -->
+        <div style="display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-3);">
+          <label for="countries-sort" style="font-weight: 600; color: var(--color-muted);">Sort by:</label>
+          <select id="countries-sort" class="input" style="width: auto; min-width: 200px;">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="population-desc">Population (High to Low)</option>
+            <option value="population-asc">Population (Low to High)</option>
+            <option value="area-desc">Area (Largest First)</option>
+            <option value="area-asc">Area (Smallest First)</option>
+          </select>
+        </div>
       </div>
-      <div id="countries-applied-filter" style="padding: var(--space-3); color: var(--color-muted); font-size: var(--font-size-sm); display: none;">
-        <strong id="filter-label"></strong>
-        <button id="clear-filter-btn" class="btn btn-sm" style="margin-left: var(--space-2); padding: var(--space-1) var(--space-2);">Clear Filter</button>
-      </div>
+
       <div id="countries-content" class="section-block"></div>
     </section>
   `;
 
   const contentEl = appEl.querySelector("#countries-content");
-  const searchInput = appEl.querySelector("#countries-search");
   const sortSelect = appEl.querySelector("#countries-sort");
-  const filterTypeSelect = appEl.querySelector("#countries-filter-type");
-  const filterInputsDiv = appEl.querySelector("#countries-filter-inputs");
-  const appliedFilterDiv = appEl.querySelector("#countries-applied-filter");
-  const filterLabelEl = appEl.querySelector("#filter-label");
-  const clearFilterBtn = appEl.querySelector("#clear-filter-btn");
+  const filterTabs = appEl.querySelectorAll(".filter-tab");
+  const filterPanels = appEl.querySelectorAll(".filter-panel");
+
+  // Name search elements
+  const searchNameInput = appEl.querySelector("#search-name-input");
+  const searchNameBtn = appEl.querySelector("#search-name-btn");
+
+  // Code search elements
+  const searchCodeInput = appEl.querySelector("#search-code-input");
+  const searchCodeBtn = appEl.querySelector("#search-code-btn");
+
+  // Region filter elements
+  const regionSelect = appEl.querySelector("#region-select");
 
   let allCountries = [];
-  let currentFilterType = "all";
-  let currentFilterValue = "";
+  let displayedCountries = [];
+  let currentMode = FILTER_MODE.ALL;
   let currentSort = "name-asc";
   let debounceTimer = null;
-  let displayCountries = [];
 
-  // Update filter inputs based on filter type
-  function updateFilterInputs() {
-    filterInputsDiv.innerHTML = "";
-    searchInput.style.display = "none";
+  // Handle tab switching
+  function switchTab(mode) {
+    currentMode = mode;
 
-    if (currentFilterType === "name") {
-      const input = document.createElement("input");
-      input.type = "search";
-      input.id = "countries-search";
-      input.className = "input";
-      input.placeholder = "Enter country name...";
-      input.setAttribute("aria-label", "Search countries by name");
-      input.style.width = "min(280px, 100%)";
-      filterInputsDiv.appendChild(input);
-      input.addEventListener("input", handleFilterInput);
-      input.focus();
-    } else if (currentFilterType === "code") {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.id = "countries-code-search";
-      input.className = "input";
-      input.placeholder = "Enter country code (2-3 letters)...";
-      input.setAttribute("aria-label", "Search countries by ISO code");
-      input.style.width = "min(280px, 100%)";
-      input.maxLength = "3";
-      filterInputsDiv.appendChild(input);
-      input.addEventListener("input", handleFilterInput);
-      input.focus();
-    } else if (currentFilterType === "region") {
-      const select = document.createElement("select");
-      select.id = "countries-region-select";
-      select.className = "input";
-      select.style.width = "auto";
-      select.style.minWidth = "150px";
-      select.innerHTML =
-        `<option value="">Select a region...</option>` +
-        REGIONS.map((r) => `<option value="${r}">${r}</option>`).join("");
-      filterInputsDiv.appendChild(select);
-      select.addEventListener("change", handleFilterInput);
-      select.focus();
+    // Update active tab styling
+    filterTabs.forEach((tab) => {
+      const isActive = tab.dataset.mode === mode;
+      tab.classList.toggle("active", isActive);
+      tab.style.borderBottomColor = isActive
+        ? "var(--color-primary)"
+        : "transparent";
+      tab.style.color = isActive ? "var(--color-primary)" : "";
+    });
+
+    // Show/hide filter panels
+    filterPanels.forEach((panel) => {
+      panel.style.display = panel.dataset.panel === mode ? "block" : "none";
+    });
+
+    // Load data based on mode
+    if (mode === FILTER_MODE.ALL) {
+      loadAllCountries();
     }
   }
 
-  // Filter type changed
-  function handleFilterTypeChange() {
-    currentFilterType = filterTypeSelect?.value || "all";
-    currentFilterValue = "";
-    displayCountries = [];
-    updateFilterInputs();
+  // Attach tab listeners
+  filterTabs.forEach((tab) => {
+    tab.addEventListener("click", () => switchTab(tab.dataset.mode));
+  });
 
-    if (currentFilterType === "all") {
-      appliedFilterDiv.style.display = "none";
-      renderCountries(sortedCountries(allCountries));
-    }
-  }
-
-  // Handle filter input changes
-  function handleFilterInput() {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      if (currentFilterType === "name") {
-        const input = filterInputsDiv.querySelector("#countries-search");
-        currentFilterValue = input?.value?.trim() || "";
-        if (currentFilterValue.length > 0) {
-          await loadCountriesByName(currentFilterValue);
-        }
-      } else if (currentFilterType === "code") {
-        const input = filterInputsDiv.querySelector("#countries-code-search");
-        currentFilterValue = input?.value?.trim().toUpperCase() || "";
-        if (currentFilterValue.length >= 2) {
-          await loadCountriesByCode(currentFilterValue);
-        }
-      } else if (currentFilterType === "region") {
-        const select = filterInputsDiv.querySelector(
-          "#countries-region-select",
+  const sortedCountries = (countries) => {
+    const sorted = [...countries];
+    switch (currentSort) {
+      case "name-asc":
+        return sorted.sort((a, b) =>
+          a.name.common.localeCompare(b.name.common),
         );
-        currentFilterValue = select?.value || "";
-        if (currentFilterValue) {
-          await loadCountriesByRegion(currentFilterValue);
-        }
-      }
-    }, DEBOUNCE_MS);
-  }
+      case "name-desc":
+        return sorted.sort((a, b) =>
+          b.name.common.localeCompare(a.name.common),
+        );
+      case "population-desc":
+        return sorted.sort((a, b) => (b.population || 0) - (a.population || 0));
+      case "population-asc":
+        return sorted.sort((a, b) => (a.population || 0) - (b.population || 0));
+      case "area-desc":
+        return sorted.sort((a, b) => (b.area || 0) - (a.area || 0));
+      case "area-asc":
+        return sorted.sort((a, b) => (a.area || 0) - (b.area || 0));
+      default:
+        return sorted;
+    }
+  };
 
-  // Load all countries (no filter)
-  async function loadCountries() {
+  async function loadAllCountries() {
     if (!contentEl) return;
     showLoader(contentEl);
-    appliedFilterDiv.style.display = "none";
     try {
       allCountries = (await getAllCountries()) || [];
-      displayCountries = [...allCountries];
+      displayedCountries = [...allCountries];
       hideLoader();
-      renderCountries(sortedCountries(displayCountries));
+      renderCountries(sortedCountries(displayedCountries));
+      showToast(`Loaded ${allCountries.length} countries`, "success");
     } catch (error) {
       hideLoader();
       const message =
         error instanceof Error ? error.message : "Failed to load countries";
       showToast(message, "error");
-      renderError(message, loadCountries);
+      renderError(message);
     }
   }
 
-  // Load countries by name
-  async function loadCountriesByName(name) {
-    if (!contentEl) return;
+  async function searchByName() {
+    const query = searchNameInput?.value?.trim();
+    if (!query) {
+      showToast("Please enter a country name", "error");
+      return;
+    }
+
     showLoader(contentEl);
     try {
-      const results = (await getCountryByName(name)) || [];
-      displayCountries = results;
+      const countries = await getCountryByName(query);
+      displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `Showing results for: "${name}" (${results.length} found)`;
-      renderCountries(sortedCountries(displayCountries));
+      renderCountries(sortedCountries(displayedCountries));
+      showToast(`Found ${displayedCountries.length} result(s)`, "success");
     } catch (error) {
       hideLoader();
       const message =
         error instanceof Error ? error.message : "Country not found";
       showToast(message, "error");
-      displayCountries = [];
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `No results found for: "${name}"`;
-      renderCountries([]);
+      renderError(`No results found for "${query}"`);
     }
   }
 
-  // Load countries by code
-  async function loadCountriesByCode(code) {
-    if (!contentEl) return;
+  async function searchByCode() {
+    const code = searchCodeInput?.value?.trim().toUpperCase();
+    if (!code) {
+      showToast("Please enter a country code", "error");
+      return;
+    }
+
     showLoader(contentEl);
     try {
-      const results = (await getCountryByCode(code)) || [];
-      displayCountries = results;
+      const countries = await getCountryByCode(code);
+      displayedCountries = Array.isArray(countries) ? countries : [countries];
       hideLoader();
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `Country code: ${code.toUpperCase()} (${results.length} found)`;
-      renderCountries(sortedCountries(displayCountries));
+      renderCountries(sortedCountries(displayedCountries));
+      showToast(`Found country with code "${code}"`, "success");
     } catch (error) {
       hideLoader();
       const message =
         error instanceof Error ? error.message : "Country code not found";
       showToast(message, "error");
-      displayCountries = [];
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `No country found with code: "${code.toUpperCase()}"`;
-      renderCountries([]);
+      renderError(`No country found with code "${code}"`);
     }
   }
 
-  // Load countries by region
-  async function loadCountriesByRegion(region) {
-    if (!contentEl) return;
+  async function filterByRegion() {
+    const region = regionSelect?.value;
+    if (!region || region === "all") {
+      displayedCountries = [...allCountries];
+      renderCountries(sortedCountries(displayedCountries));
+      return;
+    }
+
     showLoader(contentEl);
     try {
-      const results = (await getCountriesByRegion(region)) || [];
-      displayCountries = results;
+      const countries = await getCountriesByRegion(region);
+      displayedCountries = countries || [];
       hideLoader();
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `Region: ${region} (${results.length} countries)`;
-      renderCountries(sortedCountries(displayCountries));
+      renderCountries(sortedCountries(displayedCountries));
+      showToast(
+        `Found ${displayedCountries.length} countries in ${region}`,
+        "success",
+      );
     } catch (error) {
       hideLoader();
       const message =
-        error instanceof Error ? error.message : "Failed to load region";
+        error instanceof Error ? error.message : "Failed to filter countries";
       showToast(message, "error");
-      displayCountries = [];
-      appliedFilterDiv.style.display = "block";
-      filterLabelEl.textContent = `Failed to load region: ${region}`;
-      renderCountries([]);
+      renderError(`Failed to load countries in ${region}`);
     }
   }
 
-  // Render countries grid
   function renderCountries(countries) {
     if (!countries.length) {
       contentEl.innerHTML = `
         <div class="empty-state">
-          <h3>${currentFilterType !== "all" ? "No matches found" : "No countries available"}</h3>
-          <p>${currentFilterType !== "all" ? "Try a different search or filter." : "Try again later."}</p>
+          <h3>No countries found</h3>
+          <p>Try adjusting your search or filter criteria.</p>
         </div>
       `;
       return;
@@ -277,6 +314,9 @@ export function renderCountriesPage(appEl) {
                 </div>
                 <div>
                   <strong>Population:</strong> ${formatPopulation(country.population)}
+                </div>
+                <div>
+                  <strong>Area:</strong> ${country.area ? `${formatPopulation(country.area)} km²` : "N/A"}
                 </div>
                 <div>
                   <strong>Capital:</strong> ${country.capital?.[0] || "N/A"}
@@ -307,8 +347,7 @@ export function renderCountriesPage(appEl) {
     });
   }
 
-  // Render error state
-  function renderError(message, retryFn) {
+  function renderError(message) {
     if (!contentEl) return;
     contentEl.innerHTML = `
       <div class="error-state">
@@ -319,35 +358,20 @@ export function renderCountriesPage(appEl) {
     `;
 
     const retryBtn = contentEl.querySelector("#retry-btn");
-    if (retryBtn && retryFn) {
-      retryBtn.addEventListener("click", retryFn);
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => {
+        if (currentMode === FILTER_MODE.ALL) {
+          loadAllCountries();
+        }
+      });
     }
   }
 
-  // Sort countries
-  const sortedCountries = (countries) => {
-    const sorted = [...countries];
-    switch (currentSort) {
-      case "name-asc":
-        return sorted.sort((a, b) =>
-          a.name.common.localeCompare(b.name.common),
-        );
-      case "population-desc":
-        return sorted.sort((a, b) => (b.population || 0) - (a.population || 0));
-      case "population-asc":
-        return sorted.sort((a, b) => (a.population || 0) - (b.population || 0));
-      default:
-        return sorted;
-    }
-  };
-
-  // Format population with commas
   function formatPopulation(pop) {
     if (!pop && pop !== 0) return "N/A";
     return new Intl.NumberFormat().format(pop);
   }
 
-  // Show country details in modal
   function showCountryDetails(country) {
     const currencies = country.currencies
       ? Object.values(country.currencies)
@@ -374,10 +398,6 @@ export function renderCountriesPage(appEl) {
             <div style="margin-top: var(--space-1);">${country.name.official || "N/A"}</div>
           </div>
           <div>
-            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Country Code</strong>
-            <div style="margin-top: var(--space-1);">${country.cca2 || "N/A"} (Alpha-2) / ${country.cca3 || "N/A"} (Alpha-3)</div>
-          </div>
-          <div>
             <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Capital</strong>
             <div style="margin-top: var(--space-1);">${country.capital?.[0] || "N/A"}</div>
           </div>
@@ -394,12 +414,24 @@ export function renderCountriesPage(appEl) {
             <div style="margin-top: var(--space-1);">${formatPopulation(country.population)}</div>
           </div>
           <div>
-            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Area</strong>
-            <div style="margin-top: var(--space-1);">${formatPopulation(country.area)} km²</div>
-          </div>
-          <div>
             <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Currencies</strong>
             <div style="margin-top: var(--space-1);">${currencies}</div>
+          </div>
+          <div>
+            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Area</strong>
+            <div style="margin-top: var(--space-1);">${country.area ? `${formatPopulation(country.area)} km²` : "N/A"}</div>
+          </div>
+          <div>
+            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Timezones</strong>
+            <div style="margin-top: var(--space-1);">${country.timezones?.join(", ") || "N/A"}</div>
+          </div>
+          <div>
+            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Country Codes</strong>
+            <div style="margin-top: var(--space-1);">${country.cca2} / ${country.cca3}</div>
+          </div>
+          <div>
+            <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Borders</strong>
+            <div style="margin-top: var(--space-1);">${country.borders?.join(", ") || "None"}</div>
           </div>
           <div>
             <strong style="color: var(--color-muted); font-size: var(--font-size-sm);">Languages</strong>
@@ -415,30 +447,38 @@ export function renderCountriesPage(appEl) {
     });
   }
 
-  // Event listeners
+  function handleSort() {
+    currentSort = sortSelect?.value || "name-asc";
+    renderCountries(sortedCountries(displayedCountries));
+  }
+
+  // Attach event listeners
+  if (searchNameBtn) {
+    searchNameBtn.addEventListener("click", searchByName);
+  }
+  if (searchNameInput) {
+    searchNameInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") searchByName();
+    });
+  }
+
+  if (searchCodeBtn) {
+    searchCodeBtn.addEventListener("click", searchByCode);
+  }
+  if (searchCodeInput) {
+    searchCodeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") searchByCode();
+    });
+  }
+
+  if (regionSelect) {
+    regionSelect.addEventListener("change", filterByRegion);
+  }
+
   if (sortSelect) {
-    sortSelect.addEventListener("change", () => {
-      currentSort = sortSelect.value || "name-asc";
-      renderCountries(sortedCountries(displayCountries));
-    });
+    sortSelect.addEventListener("change", handleSort);
   }
 
-  if (filterTypeSelect) {
-    filterTypeSelect.addEventListener("change", handleFilterTypeChange);
-  }
-
-  if (clearFilterBtn) {
-    clearFilterBtn.addEventListener("click", () => {
-      currentFilterType = "all";
-      currentFilterValue = "";
-      filterTypeSelect.value = "all";
-      appliedFilterDiv.style.display = "none";
-      loadCountries();
-      updateFilterInputs();
-    });
-  }
-
-  // Initialize
-  updateFilterInputs();
-  loadCountries();
+  // Initial load
+  loadAllCountries();
 }
