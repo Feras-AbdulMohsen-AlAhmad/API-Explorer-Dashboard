@@ -4,7 +4,15 @@ import { ENDPOINTS } from "../api/endpoints.js";
 import { getConfig } from "../config.js";
 import { mapWeatherError } from "../utils/error-mapper.js";
 import { startLoading, stopLoading } from "../state/loading.state.js";
-import { deduplicateRequest } from "../utils/request-deduplicator.js";
+import {
+  deduplicateRequest,
+  isRequestInFlight,
+} from "../utils/request-deduplicator.js";
+import {
+  incrementNetworkRequest,
+  incrementCacheHit,
+  incrementDeduplicated,
+} from "../state/weather.debug.js";
 
 // Constants
 const BASE_URL = ENDPOINTS.WEATHERSTACK;
@@ -197,12 +205,17 @@ export async function getCurrentByQuery(query, options = {}) {
   const trimmedQuery = query.trim();
   const dedupKey = buildDedupKey("query", trimmedQuery, units);
 
+  if (isRequestInFlight(dedupKey)) {
+    incrementDeduplicated();
+  }
+
   return deduplicateRequest(dedupKey, async () => {
     // Check cache first (unless explicitly skipped)
     if (!skipCache) {
       const cacheKey = buildCacheKey(trimmedQuery, units);
       const cachedData = readCache(cacheKey);
       if (cachedData) {
+        incrementCacheHit();
         return cachedData;
       }
     }
@@ -211,6 +224,7 @@ export async function getCurrentByQuery(query, options = {}) {
     try {
       // Make API request
       const url = buildWeatherstackUrl(trimmedQuery, units, language);
+      incrementNetworkRequest();
       const response = await http.get(url);
 
       // Handle Weatherstack error format: { success: false, error: { code, type, info } }
@@ -267,6 +281,9 @@ export async function getCurrentByCoords(lat, lon, options = {}) {
   // Format as "lat,lon" for Weatherstack
   const query = `${lat},${lon}`;
   const dedupKey = buildDedupKey("coords", query, options?.units || "m");
+  if (isRequestInFlight(dedupKey)) {
+    incrementDeduplicated();
+  }
   return deduplicateRequest(dedupKey, () => getCurrentByQuery(query, options));
 }
 
@@ -279,6 +296,9 @@ export async function getCurrentByCoords(lat, lon, options = {}) {
  */
 export async function getCurrentByAutoIP(options = {}) {
   const dedupKey = buildDedupKey("ip", "fetch:ip", options?.units || "m");
+  if (isRequestInFlight(dedupKey)) {
+    incrementDeduplicated();
+  }
   return deduplicateRequest(dedupKey, () =>
     getCurrentByQuery("fetch:ip", options),
   );

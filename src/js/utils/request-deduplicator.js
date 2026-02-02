@@ -25,3 +25,13 @@ export function deduplicateRequest(key, requestFn) {
 
   return promise;
 }
+
+/**
+ * Check if a request key is already in flight
+ * @param {string} key - Unique request key
+ * @returns {boolean} True if request is already in progress
+ */
+export function isRequestInFlight(key) {
+  if (!key) return false;
+  return inFlightRequests.has(key);
+}

@@ -11,6 +11,7 @@ import {
   getLastWeatherState,
   clearLastWeatherState,
 } from "../state/weather.persistence.js";
+import { renderWeatherDebugPanel } from "../components/weather-debug.panel.js";
 
 const RECENT_SEARCHES_KEY = "weather_recent_searches";
 const MAX_RECENT_SEARCHES = 5;
@@ -157,6 +158,7 @@ export function renderWeatherPage(appEl) {
         </div>
       </div>
       <div id="weather-content" class="section-block"></div>
+      <div id="weather-debug-panel"></div>
     </section>
   `;
 
@@ -167,6 +169,7 @@ export function renderWeatherPage(appEl) {
   const unitsToggle = appEl.querySelector("#weather-units-toggle");
   const unitsLabel = appEl.querySelector("#weather-units-label");
   const suggestionsContainer = appEl.querySelector("#weather-suggestions");
+  const debugPanelEl = appEl.querySelector("#weather-debug-panel");
   let suggestions = [];
   let activeSuggestionIndex = -1;
 
@@ -352,6 +355,11 @@ export function renderWeatherPage(appEl) {
     if (locationBtn) locationBtn.disabled = disabled;
   }
 
+  function refreshDebugPanel() {
+    if (!debugPanelEl) return;
+    renderWeatherDebugPanel(debugPanelEl);
+  }
+
   function applyUnits(units) {
     const resolved = units === "f" ? "f" : "m";
     currentUnits = resolved;
@@ -406,6 +414,7 @@ export function renderWeatherPage(appEl) {
       renderEmptyState();
     } finally {
       setActionsDisabled(false);
+      refreshDebugPanel();
     }
   }
 
@@ -460,6 +469,7 @@ export function renderWeatherPage(appEl) {
       renderError(normalized);
     } finally {
       setActionsDisabled(false);
+      refreshDebugPanel();
     }
   }
 
@@ -505,6 +515,7 @@ export function renderWeatherPage(appEl) {
       renderError(normalized);
     } finally {
       setActionsDisabled(false);
+      refreshDebugPanel();
     }
   }
 
@@ -640,6 +651,7 @@ export function renderWeatherPage(appEl) {
           renderError(normalized);
         } finally {
           setActionsDisabled(false);
+          refreshDebugPanel();
         }
       },
       (error) => {
@@ -711,6 +723,7 @@ export function renderWeatherPage(appEl) {
       renderError(normalized);
     } finally {
       setActionsDisabled(false);
+      refreshDebugPanel();
     }
   }
 
@@ -785,6 +798,9 @@ export function renderWeatherPage(appEl) {
   });
 
   locationBtn?.addEventListener("click", useGeolocation);
+
+  // Render debug panel (dev only)
+  refreshDebugPanel();
 
   // Restore last state (once) or show empty state
   restoreLastState();
