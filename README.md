@@ -224,9 +224,7 @@ API-Explorer-Dashboard/
 ├── postman/                    # API testing collection
 │   ├── API-Explorer.postman_collection.json
 │   ├── API-Explorer.postman_environment.json
-│   ├── API-QA-REPORT.md        # Comprehensive QA validation report
-│   ├── POSTMAN-TEST-SCRIPTS.md # Automated testing guide
-│   └── EXECUTIVE-SUMMARY.md    # Stakeholder-friendly report
+│   └── README.md               # Complete Postman guide (unified)
 │
 └── src/                        # Application source
     ├── index.html
@@ -331,9 +329,7 @@ Core documentation organized by purpose:
 | [ACCESSIBILITY_VALIDATION.md](ACCESSIBILITY_VALIDATION.md) | WCAG 2.1 AA compliance report with 16 patches  | Accessibility engineers      |
 | [CHECKLIST.md](CHECKLIST.md)                               | Production readiness verification              | Project leads                |
 | [RELEASE_v1.0.0.md](RELEASE_v1.0.0.md)                     | Official v1.0.0 release documentation          | Release managers             |
-| [API-QA-REPORT.md](postman/API-QA-REPORT.md)               | Comprehensive API testing validation           | QA engineers                 |
-| [POSTMAN-TEST-SCRIPTS.md](postman/POSTMAN-TEST-SCRIPTS.md) | Automated testing guide with pm.test() scripts | Test automation engineers    |
-| [EXECUTIVE-SUMMARY.md](postman/EXECUTIVE-SUMMARY.md)       | Stakeholder-friendly testing summary           | Project stakeholders         |
+| [postman/README.md](postman/README.md)                     | Complete Postman guide (unified documentation) | QA engineers, testers        |
 
 ## Engineering Skills Demonstrated
 
