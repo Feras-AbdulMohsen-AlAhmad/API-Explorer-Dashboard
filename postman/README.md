@@ -2,284 +2,284 @@
 
 **API Explorer Dashboard | 24 Endpoints | 4 APIs | Production Ready**
 
-> ملف موحد شامل يحتوي على كل ما تحتاجه لاستخدام مجموعة Postman: البدء السريع، التكوين، الاختبار، والنتائج.
+> Unified comprehensive documentation containing everything you need to use the Postman collection: quick start, configuration, testing, and results.
 
 ---
 
-## 📑 جدول المحتويات
+## 📑 Table of Contents
 
-1. [البدء السريع (3 خطوات)](#-البدء-السريع-3-خطوات)
-2. [نتائج الاختبار والملخص](#-نتائج-الاختبار-والملخص-التنفيذي)
-3. [الـ 24 Endpoint منظمة](#-الـ-24-endpoint-منظمة)
-4. [متغيرات البيئة](#-متغيرات-البيئة)
-5. [Test Scripts الجاهزة](#-test-scripts-الجاهزة-للاستخدام)
-6. [الاستخدام المتقدم](#-الاستخدام-المتقدم)
-7. [استكشاف الأخطاء](#-استكشاف-الأخطاء-والحلول)
-8. [التوصيات والخطوات التالية](#-التوصيات-والخطوات-التالية)
+1. [Quick Start (3 Steps)](#-quick-start-3-steps)
+2. [Test Results & Executive Summary](#-test-results--executive-summary)
+3. [24 Endpoints Overview](#-24-endpoints-overview)
+4. [Environment Variables](#-environment-variables)
+5. [Ready-to-Use Test Scripts](#-ready-to-use-test-scripts)
+6. [Advanced Usage](#-advanced-usage)
+7. [Troubleshooting](#-troubleshooting)
+8. [Recommendations & Next Steps](#-recommendations--next-steps)
 
 ---
 
-## 🚀 البدء السريع (3 خطوات)
+## 🚀 Quick Start (3 Steps)
 
-### الخطوة 1: الاستيراد في Postman
+### Step 1: Import in Postman
 
 ```
-1. افتح Postman
-2. اضغط "Import" (أعلى يسار)
-3. اختر الملف:
+1. Open Postman
+2. Click "Import" (top-left corner)
+3. Select the file:
    - API-Explorer.postman_collection.json
-4. اضغط "Import"
-5. كرر مع: API-Explorer.postman_environment.json
-6. من قائمة "Environments" اختر: "API Explorer Environment"
+4. Click "Import"
+5. Repeat with: API-Explorer.postman_environment.json
+6. From "Environments" dropdown, select: "API Explorer Environment"
 ```
 
-**النتيجة**: سيتم تحميل 24 endpoint منظمة في 4 مجموعات + 15 متغير بيئة
+**Result**: 24 organized endpoints across 4 collections + 15 environment variables will be loaded
 
 ---
 
-### الخطوة 2: التكوين (تحديث البيانات)
+### Step 2: Configuration (Update Data)
 
 ```
-1. اضغط رمز العينين ⚙️ (أعلى يمين)
-2. اضغط "Edit" للبيئة الحالية
-3. ابحث عن: WEATHERAPI_KEY
-4. استبدل: "YOUR_WEATHERAPI_KEY_HERE"
-   → بـ مفتاحك الفعلي من: https://www.weatherapi.com/ (مجاني)
-5. اضغط Save
+1. Click the eye icon ⚙️ (top-right corner)
+2. Click "Edit" for the current environment
+3. Find: WEATHERAPI_KEY
+4. Replace: "YOUR_WEATHERAPI_KEY_HERE"
+   → With your actual key from: https://www.weatherapi.com/ (free)
+5. Click Save
 ```
 
-**المتغيرات الأخرى**: مكتملة وجاهزة (لا تحتاج تعديل)
+**Other Variables**: Complete and ready to use (no modifications needed)
 
 ---
 
-### الخطوة 3: الاختبار
+### Step 3: Testing
 
-#### الخيار A: اختبر Endpoint واحد
-
-```
-1. اختر endpoint من القائمة اليسرى
-   مثال: JSONPlaceholder > Get All Posts
-2. اضغط Send
-3. شاهد النتيجة في Response تحت النافذة
-```
-
-#### الخيار B: اختبر المجموعة كاملة
+#### Option A: Test a Single Endpoint
 
 ```
-1. انقر بزر الماوس الأيمن على "API Explorer Dashboard"
-2. اختر "Run Collection"
-3. سيتم تشغيل جميع 24 endpoint تلقائياً
-4. شاهد النتائج في نافذة Collection Runner
+1. Select an endpoint from the left sidebar
+   Example: JSONPlaceholder > Get All Posts
+2. Click Send
+3. View the response in the Response section below
+```
+
+#### Option B: Test the Entire Collection
+
+```
+1. Right-click on "API Explorer Dashboard"
+2. Select "Run Collection"
+3. All 24 endpoints will run automatically
+4. View results in the Collection Runner window
 ```
 
 ---
 
-## 📊 نتائج الاختبار والملخص التنفيذي
+## 📊 Test Results & Executive Summary
 
-### الملخص الفوري
+### Quick Summary
 
-| المعيار              | النتيجة       | الهدف | الحالة         |
-| -------------------- | ------------- | ----- | -------------- |
-| **معدل النجاح**      | 87.5% (21/24) | 100%  | 🟢 ممتاز       |
-| **عدد APIs**         | 4/4           | 4     | ✅ كامل        |
-| **APIs عامة**        | 100% (18/18)  | 100%  | ✅ مثالي       |
-| **APIs بـ Auth**     | معطلة (6/6)   | 100%  | 🟡 تحتاج تكوين |
-| **معمارية البرنامج** | 100% متوافقة  | 100%  | ✅ مثالي       |
-| **معالجة الأخطاء**   | 100% معايرة   | 100%  | ✅ مثالي       |
+| Metric | Result | Target | Status |
+|--------|--------|--------|--------|
+| **Success Rate** | 87.5% (21/24) | 100% | 🟢 Excellent |
+| **APIs Count** | 4/4 | 4 | ✅ Complete |
+| **Public APIs** | 100% (18/18) | 100% | ✅ Perfect |
+| **Protected APIs** | Blocked (6/6) | 100% | 🟡 Requires Config |
+| **Architecture Compliance** | 100% Compliant | 100% | ✅ Perfect |
+| **Error Handling** | 100% Standardized | 100% | ✅ Perfect |
 
 ---
 
-### النتائج المفصلة لكل API
+### Detailed Results by API
 
 #### ✅ JSONPlaceholder API (7 endpoints)
 
-| الرقم | الاسم               | الحالة  | الملاحظات              |
-| ----- | ------------------- | ------- | ---------------------- |
-| 1     | Get All Posts       | ✅ PASS | 100 مشاركة             |
-| 2     | Get Post by ID      | ✅ PASS | بحث بـ ID              |
-| 3     | Get Post Comments   | ✅ PASS | تعليقات المشاركة       |
-| 4     | Create Post         | ✅ PASS | إنشاء محاكاة (ID: 101) |
-| 5     | Update Post (PUT)   | ✅ PASS | استبدال كامل           |
-| 6     | Update Post (PATCH) | ✅ PASS | تحديث جزئي             |
-| 7     | Delete Post         | ✅ PASS | حذف مشاركة             |
+| # | Endpoint | Status | Notes |
+|----|----------|--------|-------|
+| 1 | Get All Posts | ✅ PASS | 100 posts |
+| 2 | Get Post by ID | ✅ PASS | Search by ID |
+| 3 | Get Post Comments | ✅ PASS | Post comments |
+| 4 | Create Post | ✅ PASS | Mock creation (ID: 101) |
+| 5 | Update Post (PUT) | ✅ PASS | Full replacement |
+| 6 | Update Post (PATCH) | ✅ PASS | Partial update |
+| 7 | Delete Post | ✅ PASS | Post deletion |
 
-**الحالة**: 🟢 **جاهز للإنتاج** ✅
+**Status**: 🟢 **Production Ready** ✅
 
 ---
 
 #### ✅ Rick & Morty API (7 endpoints)
 
-| الرقم | الاسم                          | الحالة  | الملاحظات          |
-| ----- | ------------------------------ | ------- | ------------------ |
-| 1     | Get Characters (الصفحة الأولى) | ✅ PASS | 20 شخصية           |
-| 2     | Get Characters (Page 2)        | ✅ PASS | Pagination         |
-| 3     | Filter by Name                 | ✅ PASS | البحث: "rick"      |
-| 4     | Filter by Status               | ✅ PASS | الحالة: alive/dead |
-| 5     | Filter by Species              | ✅ PASS | النوع: human/alien |
-| 6     | Filter by Gender               | ✅ PASS | الجنس: male/female |
-| 7     | Multiple Filters               | ✅ PASS | مرشحات مدمجة       |
+| # | Endpoint | Status | Notes |
+|----|----------|--------|-------|
+| 1 | Get Characters (Page 1) | ✅ PASS | 20 characters |
+| 2 | Get Characters (Page 2) | ✅ PASS | Pagination |
+| 3 | Filter by Name | ✅ PASS | Search: "rick" |
+| 4 | Filter by Status | ✅ PASS | Status: alive/dead |
+| 5 | Filter by Species | ✅ PASS | Type: human/alien |
+| 6 | Filter by Gender | ✅ PASS | Gender: male/female |
+| 7 | Multiple Filters | ✅ PASS | Combined filters |
 
-**الحالة**: 🟢 **جاهز للإنتاج** ✅
+**Status**: 🟢 **Production Ready** ✅
 
 ---
 
 #### ✅ REST Countries API (4 endpoints)
 
-| الرقم | الاسم             | الحالة  | الملاحظات         |
-| ----- | ----------------- | ------- | ----------------- |
-| 1     | Get All Countries | ✅ PASS | 250+ دولة         |
-| 2     | Get by Name       | ✅ PASS | Netherlands       |
-| 3     | Get by Code       | ✅ PASS | NL أو NLD         |
-| 4     | Filter by Region  | ✅ PASS | Europe, Africa... |
+| # | Endpoint | Status | Notes |
+|----|----------|--------|-------|
+| 1 | Get All Countries | ✅ PASS | 250+ countries |
+| 2 | Get by Name | ✅ PASS | Netherlands |
+| 3 | Get by Code | ✅ PASS | NL or NLD |
+| 4 | Filter by Region | ✅ PASS | Europe, Africa... |
 
-**الحالة**: 🟢 **جاهز للإنتاج** ✅
+**Status**: 🟢 **Production Ready** ✅
 
 ---
 
 #### 🟡 WeatherAPI.com (6 endpoints)
 
-| الرقم | الاسم                    | الحالة  | الملاحظات         |
-| ----- | ------------------------ | ------- | ----------------- |
-| 1     | Current Weather (City)   | 🔴 معطل | **يحتاج API Key** |
-| 2     | Current Weather (Coords) | 🔴 معطل | **يحتاج API Key** |
-| 3     | Current Weather (IP)     | 🔴 معطل | **يحتاج API Key** |
-| 4     | Location Search          | 🔴 معطل | **يحتاج API Key** |
-| 5     | Get Forecast             | 🔴 معطل | **يحتاج API Key** |
-| 6     | Get Historical           | 🔴 معطل | **يحتاج API Key** |
+| # | Endpoint | Status | Notes |
+|----|----------|--------|-------|
+| 1 | Current Weather (City) | 🔴 Blocked | **Requires API Key** |
+| 2 | Current Weather (Coords) | 🔴 Blocked | **Requires API Key** |
+| 3 | Current Weather (IP) | 🔴 Blocked | **Requires API Key** |
+| 4 | Location Search | 🔴 Blocked | **Requires API Key** |
+| 5 | Get Forecast | 🔴 Blocked | **Requires API Key** |
+| 6 | Get Historical | 🔴 Blocked | **Requires API Key** |
 
-**الحالة**: 🔴 **معطل - يحتاج API Key** ⚠️
-
----
-
-### ما الذي يعمل بشكل مثالي
-
-✅ **معمارية البرنامج (100%)**
-
-- API Layer: HTTP فقط ✅
-- Service Layer: معايرة + تخزين مؤقت + معالجة أخطاء ✅
-- UI Layer: عرض فقط ✅
-
-✅ **معالجة الأخطاء (100%)**
-
-- معايرة: `{title, message}` موحدة
-- جميع APIs مدعومة
-
-✅ **التخزين المؤقت (100%)**
-
-- Countries: localStorage (10 دقائق)
-- Rick & Morty: In-Memory (5 دقائق)
-- Weather: localStorage (10 دقائق)
-- Posts: بدون تخزين (متوقع)
-
-✅ **التوثيق**
-
-- وصف رائع لكل endpoint
-- بيئة مكتملة 95%
-- تنظيم واضح
+**Status**: 🔴 **Blocked - API Key Required** ⚠️
 
 ---
 
-## 🎯 الإجراء الحرج
+### What Works Perfectly
 
-### 🔴 أولوية عالية: تكوين WeatherAPI Key
+✅ **Application Architecture (100%)**
 
-**التأثير**: معطل 6 endpoints (25%)  
-**الوقت المطلوب**: 5 دقائق
+- API Layer: HTTP operations only ✅
+- Service Layer: Standardization + Caching + Error handling ✅
+- UI Layer: Presentation only ✅
 
-**الخطوات**:
+✅ **Error Handling (100%)**
 
-1. سجل في https://www.weatherapi.com/ (مجاني)
-2. انسخ API Key من لوحة التحكم
-3. حدّث `WEATHERAPI_KEY` في البيئة
-4. استبدل `"YOUR_WEATHERAPI_KEY_HERE"` بـ المفتاح الفعلي
-5. أعد تشغيل اختبارات WeatherAPI
+- Standardized format: `{title, message}`
+- All APIs supported
 
-**بعد الانتهاء**: 100% جاهز (24/24 endpoints)
+✅ **Caching (100%)**
+
+- Countries: localStorage (10-minute TTL)
+- Rick & Morty: In-Memory (5-minute TTL)
+- Weather: localStorage (10-minute TTL)
+- Posts: No caching (as expected)
+
+✅ **Documentation**
+
+- Excellent descriptions for each endpoint
+- 95% complete environment
+- Clear organization
 
 ---
 
-## 📍 الـ 24 Endpoint منظمة
+## 🎯 Critical Action Item
+
+### 🔴 High Priority: Configure WeatherAPI Key
+
+**Impact**: 6 endpoints blocked (25%)  
+**Time Required**: 5 minutes
+
+**Steps**:
+
+1. Register at https://www.weatherapi.com/ (free)
+2. Copy API Key from dashboard
+3. Update `WEATHERAPI_KEY` in the environment
+4. Replace `"YOUR_WEATHERAPI_KEY_HERE"` with your actual key
+5. Re-run WeatherAPI tests
+
+**After Completion**: 100% ready (24/24 endpoints)
+
+---
+
+## 📍 24 Endpoints Overview
 
 ### JSONPlaceholder (7)
 
 ```
-GET    /posts                    - جميع المشاركات
-GET    /posts/:id                - مشاركة معينة
-GET    /posts/:id/comments       - تعليقات المشاركة
-POST   /posts                    - إنشاء مشاركة
-PUT    /posts/:id                - تحديث كامل
-PATCH  /posts/:id                - تحديث جزئي
-DELETE /posts/:id                - حذف مشاركة
+GET    /posts                    - All posts
+GET    /posts/:id                - Specific post
+GET    /posts/:id/comments       - Post comments
+POST   /posts                    - Create post
+PUT    /posts/:id                - Full update
+PATCH  /posts/:id                - Partial update
+DELETE /posts/:id                - Delete post
 ```
 
 ### Rick & Morty (7)
 
 ```
-GET /character                             - الصفحة الأولى
-GET /character?page=2                      - صفحة معينة
-GET /character?name=rick                   - البحث بالاسم
-GET /character?status=alive                - تصفية بالحالة
-GET /character?species=human               - تصفية بالنوع
-GET /character?gender=male                 - تصفية بالجنس
-GET /character?page=5&status=dead&species=human  - مرشحات متعددة
+GET /character                             - First page
+GET /character?page=2                      - Specific page
+GET /character?name=rick                   - Search by name
+GET /character?status=alive                - Filter by status
+GET /character?species=human               - Filter by species
+GET /character?gender=male                 - Filter by gender
+GET /character?page=5&status=dead&species=human  - Multiple filters
 ```
 
 ### REST Countries (4)
 
 ```
-GET /all                   - جميع الدول (250+)
-GET /name/netherlands      - البحث بالاسم
-GET /alpha/nl              - البحث بالرمز
-GET /region/europe         - التصفية بالمنطقة
+GET /all                   - All countries (250+)
+GET /name/netherlands      - Search by name
+GET /alpha/nl              - Search by code
+GET /region/europe         - Filter by region
 ```
 
 ### WeatherAPI (6)
 
 ```
-GET /current.json?q=Berlin              - الطقس الحالي
-GET /current.json?q=52.52,13.405        - الطقس بالإحداثيات
-GET /current.json?q=auto:ip             - الطقس بـ IP
-GET /search.json?q=berlin               - البحث عن مدينة
-GET /forecast.json?q=Berlin&days=7      - التنبؤ لـ 7 أيام
-GET /history.json?q=Berlin&dt=2024-01-15 - بيانات تاريخية
+GET /current.json?q=Berlin              - Current weather
+GET /current.json?q=52.52,13.405        - Weather by coordinates
+GET /current.json?q=auto:ip             - Weather by IP
+GET /search.json?q=berlin               - City search
+GET /forecast.json?q=Berlin&days=7      - 7-day forecast
+GET /history.json?q=Berlin&dt=2024-01-15 - Historical data
 ```
 
 ---
 
-## ⚙️ متغيرات البيئة
+## ⚙️ Environment Variables
 
-### المتغيرات المكتملة (9/10) ✅
+### Complete Variables (9/10) ✅
 
-| المتغير               | القيمة                                 | الحالة | الملاحظات |
-| --------------------- | -------------------------------------- | ------ | --------- |
-| `jsonplaceholder_url` | `https://jsonplaceholder.typicode.com` | ✅     | صحيح      |
-| `rickmorty_url`       | `https://rickandmortyapi.com/api`      | ✅     | صحيح      |
-| `restcountries_url`   | `https://restcountries.com/v3.1`       | ✅     | صحيح      |
-| `WEATHERAPI_URL`      | `https://api.weatherapi.com/v1`        | ✅     | صحيح      |
-| `post_id`             | `1`                                    | ✅     | صحيح      |
-| `CITY_NAME`           | `Berlin`                               | ✅     | صحيح      |
-| `LATITUDE`            | `52.52`                                | ✅     | صحيح      |
-| `LONGITUDE`           | `13.405`                               | ✅     | صحيح      |
-| `HISTORICAL_DATE`     | `2024-01-15`                           | ✅     | صحيح      |
+| Variable | Value | Status | Notes |
+|----------|-------|--------|-------|
+| `jsonplaceholder_url` | `https://jsonplaceholder.typicode.com` | ✅ | Correct |
+| `rickmorty_url` | `https://rickandmortyapi.com/api` | ✅ | Correct |
+| `restcountries_url` | `https://restcountries.com/v3.1` | ✅ | Correct |
+| `WEATHERAPI_URL` | `https://api.weatherapi.com/v1` | ✅ | Correct |
+| `post_id` | `1` | ✅ | Correct |
+| `CITY_NAME` | `Berlin` | ✅ | Correct |
+| `LATITUDE` | `52.52` | ✅ | Correct |
+| `LONGITUDE` | `13.405` | ✅ | Correct |
+| `HISTORICAL_DATE` | `2024-01-15` | ✅ | Correct |
 
-### المتغيرات المطلوب تحديثها (1/10) 🔴
+### Variables Requiring Update (1/10) 🔴
 
-| المتغير          | القيمة الحالية             | المطلوب    | الحالة  |
-| ---------------- | -------------------------- | ---------- | ------- |
-| `WEATHERAPI_KEY` | `YOUR_WEATHERAPI_KEY_HERE` | مفتاح فعلي | 🔴 معطل |
+| Variable | Current Value | Required | Status |
+|----------|---------------|----------|--------|
+| `WEATHERAPI_KEY` | `YOUR_WEATHERAPI_KEY_HERE` | Real key | 🔴 Blocked |
 
 ---
 
-## 🧪 Test Scripts الجاهزة للاستخدام
+## 🧪 Ready-to-Use Test Scripts
 
-### كيفية الإضافة
+### How to Add
 
 ```
-1. اختر endpoint
-2. انقر على تبويب "Tests" أسفل URL
-3. انسخ script من القسم المناسب أدناه
-4. الصق في التبويب Tests
-5. اضغط Save
+1. Select an endpoint
+2. Click the "Tests" tab below the URL
+3. Copy the script from the appropriate section below
+4. Paste into the Tests tab
+5. Click Save
 ```
 
 ---
@@ -468,9 +468,8 @@ pm.test("Pagination info present", function () {
 });
 
 pm.test("Page 2 has different results than page 1", function () {
-  // Store results from different pages
   var results = pm.response.json().results;
-  pm.expect(results.length).to.equal(20); // Rick & Morty returns 20 per page
+  pm.expect(results.length).to.equal(20);
 });
 ```
 
@@ -555,7 +554,7 @@ pm.test("Returns multiple countries", function () {
 
 ---
 
-### WeatherAPI Test Scripts (بعد تحديث API Key)
+### WeatherAPI Test Scripts (After API Key Update)
 
 #### Current Weather
 
@@ -619,24 +618,24 @@ pm.test("Each day has date and day info", function () {
 
 ---
 
-## 🔧 الاستخدام المتقدم
+## 🔧 Advanced Usage
 
-### Newman CLI (تشغيل من سطر الأوامر)
+### Newman CLI (Command-Line Execution)
 
-#### التثبيت
+#### Installation
 
 ```bash
 npm install -g newman
 ```
 
-#### تشغيل بسيط
+#### Simple Run
 
 ```bash
 newman run API-Explorer.postman_collection.json \
   -e API-Explorer.postman_environment.json
 ```
 
-#### تشغيل مع تقرير JSON
+#### Run with JSON Report
 
 ```bash
 newman run API-Explorer.postman_collection.json \
@@ -644,13 +643,13 @@ newman run API-Explorer.postman_collection.json \
   -r json
 ```
 
-#### تشغيل مع خيارات متقدمة
+#### Run with Advanced Options
 
 ```bash
 newman run API-Explorer.postman_collection.json \
   -e API-Explorer.postman_environment.json \
-  -n 3 \                # تشغيل 3 مرات
-  -d 500 \              # 500ms بين الطلبات
+  -n 3 \                # Run 3 iterations
+  -d 500 \              # 500ms delay between requests
   -r json,cli
 ```
 
@@ -680,7 +679,6 @@ jobs:
 #### Docker
 
 ```bash
-# تشغيل الاختبارات في Docker
 docker run -v $PWD:/etc/newman \
   postman/newman:latest \
   run API-Explorer.postman_collection.json \
@@ -689,186 +687,186 @@ docker run -v $PWD:/etc/newman \
 
 ---
 
-### Collection Runner (في Postman)
+### Collection Runner (In Postman)
 
 ```
-1. اضغط "Runner" (أعلى يسار)
-2. اختر "API Explorer Dashboard"
-3. اختر "API Explorer Environment"
-4. اضغط "Run API Explorer Dashboard"
-5. شاهد النتائج في الأعلى
-6. اضغط "Export Results" لحفظ التقرير
-```
-
----
-
-## 🐛 استكشاف الأخطاء والحلول
-
-### مشكلة: "Request failed"
-
-**السبب**: عادة مشكلة في الاتصال أو الـ URL  
-**الحل**:
-
-```
-1. تحقق من الإنترنت
-2. تحقق من صحة URL في Environment
-3. تحقق من الـ Proxy إن كان مفعلاً
-   → Settings → Proxy → تعطيل
+1. Click "Runner" (top-left)
+2. Select "API Explorer Dashboard"
+3. Select "API Explorer Environment"
+4. Click "Run API Explorer Dashboard"
+5. View results in the top window
+6. Click "Export Results" to save the report
 ```
 
 ---
 
-### مشكلة: "401 Unauthorized" أو "Invalid API Key"
+## 🐛 Troubleshooting
 
-**السبب**: API key خاطئ أو غير مكتمل  
-**الحل**:
+### Problem: "Request failed"
 
-```
-1. سجل في https://www.weatherapi.com/
-2. انسخ API key من لوحة التحكم
-3. حدّث WEATHERAPI_KEY في Environment
-4. استبدل "YOUR_WEATHERAPI_KEY_HERE" بالمفتاح الفعلي
-```
-
----
-
-### مشكلة: "CORS Error"
-
-**السبب**: مشكلة في المتصفح (طبيعية)  
-**الحل**:
+**Cause**: Usually a connection or URL issue  
+**Solution**:
 
 ```
-Postman لا يواجه هذه المشكلة عادة.
-إذا حدثت:
-1. اذهب إلى Settings
-2. ابحث عن "SSL certificate verification"
-3. عطّل الخيار
+1. Check internet connection
+2. Verify URL correctness in Environment
+3. Check if Proxy is enabled
+   → Settings → Proxy → Disable
 ```
 
 ---
 
-### مشكلة: "Response time too long"
+### Problem: "401 Unauthorized" or "Invalid API Key"
 
-**السبب**: اتصال بطيء أو API خامل  
-**الحل**:
-
-```
-1. تحقق من سرعة الإنترنت
-2. جرب من متصفح (للمقارنة)
-3. أعد المحاولة في وقت آخر
-```
-
----
-
-### مشكلة: "Environment variable not found"
-
-**السبب**: عدم تحديث البيئة أو متغير حذف  
-**الحل**:
+**Cause**: Incorrect or incomplete API key  
+**Solution**:
 
 ```
-1. تأكد من اختيار "API Explorer Environment"
-2. اضغط رمز العين ⚙️ للتحقق من المتغيرات
-3. أعد استيراد Environment إن لزم
+1. Register at https://www.weatherapi.com/
+2. Copy API key from dashboard
+3. Update WEATHERAPI_KEY in Environment
+4. Replace "YOUR_WEATHERAPI_KEY_HERE" with your actual key
 ```
 
 ---
 
-## 📈 جودة الاختبارات
+### Problem: "CORS Error"
 
-| المقياس              | النتيجة          | الدرجة |
-| -------------------- | ---------------- | ------ |
-| تغطية Endpoints      | 24/24 (100%)     | A+     |
-| اختبار APIs العامة   | 18/18 (100%)     | A+     |
-| معمارية البرنامج     | 100%             | A+     |
-| معايرة الأخطاء       | 100%             | A+     |
-| تنفيذ التخزين المؤقت | 100%             | A+     |
-| التوثيق              | ممتاز            | A      |
-| أتمتة الاختبارات     | 0% (يحتاج إضافة) | C      |
-| **الإجمالي**         | **87.5%**        | **B+** |
-
----
-
-## ✅ معايير الإنتاج
-
-### المتطلبات المحققة
-
-| المعيار               | الحالة   | الدليل                  |
-| --------------------- | -------- | ----------------------- |
-| جميع Endpoints مختبرة | ✅ 87.5% | API-QA-REPORT.json      |
-| معمارية متوافقة       | ✅ 100%  | التحقق من Service Layer |
-| معالجة أخطاء معايرة   | ✅ 100%  | error-mapper.js         |
-| تخزين مؤقت            | ✅ 100%  | Service Layer           |
-| توثيق كامل            | ✅ 100%  | 4 وثائق                 |
-| بيئة مكتملة           | ✅ 95%   | API key فقط             |
-| Test Scripts          | ✅ 100%  | هذا الملف               |
-
-### الحالة النهائية
-
-🟢 **معتمد للإنتاج** مع ملاحظة واحدة:
-
-✅ APIs عامة: مختبرة بالكامل  
-🟡 WeatherAPI: يحتاج API key (5 دقائق لإصلاحه)  
-✅ معمارية: 100% متوافقة  
-✅ معالجة الأخطاء: معايرة بالكامل  
-✅ الأداء: تخزين مؤقت + إزالة تكرار
-
-**الدرجة النهائية**: **B+ (87.5%)** → **A+ (100%)** بعد تحديث API Key
-
----
-
-## 🎯 التوصيات والخطوات التالية
-
-### فوري (5 دقائق)
-
-- [ ] حدّث WEATHERAPI_KEY
-- [ ] اختبر جميع endpoints الـ 6 الخاصة بـ WeatherAPI
-- [ ] تحقق من معدل النجاح 100%
-
-### قصير المدى (ساعة)
-
-- [ ] أضف Automated Test Scripts لكل endpoint
-- [ ] أضف Pre-Request Scripts
-- [ ] شغّل Newman CLI
-- [ ] أنشئ تقرير الاختبار
-
-### تحسينات اختيارية
-
-- [ ] أضف endpoint `GET /character/{id}`
-- [ ] احذف متغيرات البيئة غير المستخدمة
-- [ ] أضف توثيق على مستوى Collection
-- [ ] ربط مع CI/CD
-
----
-
-## 📚 الملفات ذات الصلة
-
-| الملف                                     | الوصف                  |
-| ----------------------------------------- | ---------------------- |
-| **API-Explorer.postman_collection.json**  | مجموعة الـ 24 endpoint |
-| **API-Explorer.postman_environment.json** | 15 متغير بيئة          |
-| **README.md**                             | هذا الملف الشامل       |
-| **../README.md**                          | دليل المشروع الرئيسي   |
-| **../MAINTENANCE_GUIDE.md**               | دليل العمارة والصيانة  |
-
----
-
-## 🏆 الخلاصة
+**Cause**: Browser-specific issue (normal)  
+**Solution**:
 
 ```
-✅ 24 Endpoint جاهزة للاستخدام
-✅ 18/18 API عامة تعمل بشكل مثالي
-🟡 6/6 WeatherAPI تحتاج API key (إصلاح سريع)
-✅ معمارية 100% متوافقة
-✅ توثيق شامل
-✅ Test Scripts جاهزة
-✅ جاهز للإنتاج (مع حفظ صغير)
-
-معدل النجاح: 87.5%
-بعد تحديث API Key: 100%
+Postman usually doesn't encounter this issue.
+If it does:
+1. Go to Settings
+2. Search for "SSL certificate verification"
+3. Disable the option
 ```
 
 ---
 
-**تم الإنشاء**: فبراير 3، 2026  
-**الإصدار**: 1.0.0  
-**الحالة**: ✅ جاهز للاستخدام الفوري
+### Problem: "Response time too long"
+
+**Cause**: Slow connection or idle API  
+**Solution**:
+
+```
+1. Check internet speed
+2. Try from browser (for comparison)
+3. Retry at a different time
+```
+
+---
+
+### Problem: "Environment variable not found"
+
+**Cause**: Environment not selected or variable deleted  
+**Solution**:
+
+```
+1. Ensure "API Explorer Environment" is selected
+2. Click the eye icon ⚙️ to verify variables
+3. Re-import Environment if needed
+```
+
+---
+
+## 📈 Test Quality Metrics
+
+| Metric | Result | Grade |
+|--------|--------|-------|
+| Endpoints Coverage | 24/24 (100%) | A+ |
+| Public API Testing | 18/18 (100%) | A+ |
+| Architecture | 100% Compliant | A+ |
+| Error Standardization | 100% | A+ |
+| Caching Implementation | 100% | A+ |
+| Documentation | Excellent | A |
+| Test Automation | 0% (needs addition) | C |
+| **Overall** | **87.5%** | **B+** |
+
+---
+
+## ✅ Production Standards
+
+### Requirements Met
+
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| All Endpoints Tested | ✅ 87.5% | Test Results |
+| Architecture Compliant | ✅ 100% | Service Layer |
+| Error Handling Standardized | ✅ 100% | error-mapper.js |
+| Caching Implemented | ✅ 100% | Service Layer |
+| Complete Documentation | ✅ 100% | 4 Documents |
+| Environment Complete | ✅ 95% | API key only |
+| Test Scripts | ✅ 100% | This file |
+
+### Final Status
+
+🟢 **Production Approved** with one note:
+
+✅ Public APIs: Fully tested  
+🟡 WeatherAPI: Requires API key (5 minutes to fix)  
+✅ Architecture: 100% compliant  
+✅ Error Handling: Fully standardized  
+✅ Performance: Caching + Deduplication
+
+**Final Grade**: **B+ (87.5%)** → **A+ (100%)** after API Key update
+
+---
+
+## 🎯 Recommendations & Next Steps
+
+### Immediate (5 minutes)
+
+- [ ] Update WEATHERAPI_KEY
+- [ ] Test all 6 WeatherAPI endpoints
+- [ ] Verify 100% success rate
+
+### Short-term (1 hour)
+
+- [ ] Add Automated Test Scripts for each endpoint
+- [ ] Add Pre-Request Scripts
+- [ ] Run Newman CLI
+- [ ] Generate test report
+
+### Optional Improvements
+
+- [ ] Add GET /character/{id} endpoint
+- [ ] Remove unused environment variables
+- [ ] Add Collection-level documentation
+- [ ] Integrate with CI/CD
+
+---
+
+## 📚 Related Files
+
+| File | Description |
+|------|-------------|
+| **API-Explorer.postman_collection.json** | 24 endpoints collection |
+| **API-Explorer.postman_environment.json** | 15 environment variables |
+| **README.md** | This comprehensive guide |
+| **../README.md** | Main project guide |
+| **../MAINTENANCE_GUIDE.md** | Architecture and maintenance guide |
+
+---
+
+## 🏆 Summary
+
+```
+✅ 24 Endpoints Ready to Use
+✅ 18/18 Public APIs Working Perfectly
+🟡 6/6 WeatherAPI Requires API Key (Quick Fix)
+✅ 100% Architecture Compliant
+✅ Complete Documentation
+✅ Test Scripts Ready
+✅ Production Ready (Minor Note)
+
+Success Rate: 87.5%
+After API Key Update: 100%
+```
+
+---
+
+**Created**: February 3, 2026  
+**Version**: 1.0.0  
+**Status**: ✅ Ready for Immediate Use
